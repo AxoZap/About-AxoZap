@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+  <style>body,html,iframe{margin:0;padding:0;height:100%;width:100%;overflow:hidden}.forceIosScrolling{overflow:scroll;-webkit-overflow-scrolling:touch}</style>
+<script src="cb=gapi_eGdG.js" async=""></script><script src="api_eGdG.js" gapi_processed="true"></script><!-- brvgs-fix-css -->
+<style>
+/* --- Fix: dropdown submenus don't need Google's broken offline JS anymore --- */
+li[data-nav-level="1"] > .oGuwee {
+  display: none !important;
+}
+li[data-nav-level="1"]:hover > .oGuwee,
+li[data-nav-level="1"]:focus-within > .oGuwee {
+  display: block !important;
+}
+
+/* --- Fix: embedded YouTube videos collapsing to 0 height offline --- */
+iframe[src*="youtube.com"] {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 100% !important;
+  height: 500px !important;
+  min-height: 400px !important;
+  border: 0 !important;
+}
+.YMEQtf, .WIdY2d.M1aSXe {
+  min-height: 400px !important;
+}
+</style>
+<meta name="referrer" content="strict-origin-when-cross-origin">
+</head>
+
+<body>
+<iframe id="userHtmlFrame" frameborder="0" scrolling="yes" style="overflow: auto;">
+</iframe>
+
+<script>
+  let policy;
+  if (window.trustedTypes && window.trustedTypes.createPolicy) {
+    policy = window.trustedTypes.createPolicy('atari-gapi-loader', {
+      createScriptURL: (url) => {
+        if (url === 'https://apis.google.com/js/api.js?checkCookie=1') {
+          return url;
+        }
+        throw new Error('Attempted to load unexpected script URL');
+      },
+      createHTML: (html) => html
+    });
+  }
+
+  function loadGapi() {
+    var loaderScript = document.createElement('script');
+    var url = 'https://apis.google.com/js/api.js?checkCookie=1';
+    if (policy) {
+      loaderScript.src = policy.createScriptURL(url);
+    } else {
+      loaderScript.setAttribute('src', url);
+    }
+    loaderScript.onload = function() {
+      this.onload = function() {};
+      loadGapiClient();
+    };
+    loaderScript.onreadystatechange = function() {
+      if (this.readyState === 'complete') {
+        this.onload();
+      }
+    };
+    (document.head || document.body || document.documentElement).appendChild(loaderScript);
+  }
+
+  function updateUserHtmlFrame(userHtml, enableInteraction, forceIosScrolling, enableHtmlSitesGenAi) {
+    var frame = document.getElementById('userHtmlFrame');
+    if (enableInteraction) {
+      if (forceIosScrolling) {
+        var iframeParent = frame.parentElement;
+        iframeParent.classList.add('forceIosScrolling');
+      } else {
+        frame.style.overflow = 'auto';
+      }
+    } else {
+      // TODO(tianm): Figure out a better way to do this, esp if the scrolling attribute stops being
+      // supported in browsers. Even though the scrolling attribute is deprecated, we need it for
+      // the innermost frame because we can't set "overflow:hidden" on its body and html without
+      // manually inserting a style tag into the frame, which we want to avoid (because it could
+      // interfere/conflict with the user code).
+      frame.setAttribute('scrolling', 'no');
+      frame.style.pointerEvents = 'none';
+    }
+    clearCookies();
+    clearStorage();
+    frame.contentWindow.document.open();
+    const bootstrapStyle = enableHtmlSitesGenAi ? '<link rel="stylesheet" href="bootstrap.min.css">' : '';
+    const content = '<base href="' + window.location.href + '" target="_blank">' + bootstrapStyle + userHtml;
+    frame.contentWindow.document.write(policy ? policy.createHTML(content) : content);
+    frame.contentWindow.document.close();
+  }
+
+  function onGapiInitialized() {
+    // Inform the parent frame that GAPI has been initialized.
+    gapi.rpc.call('..', 'innerFrameGapiInitialized');
+    gapi.rpc.register('updateUserHtmlFrame', updateUserHtmlFrame);
+  }
+
+  function loadGapiClient() {
+    gapi.load('gapi.rpc', onGapiInitialized);
+  }
+
+  if (document.readyState == 'complete') {
+    loadGapi();
+  } else {
+    self.addEventListener('load', loadGapi);
+  }
+
+  function clearCookies() {
+    var cookies = document.cookie.split(";");
+    for (var i = 0; i < cookies.length; i++) {
+        var cookie = cookies[i];
+        var equalPosition = cookie.indexOf("=");
+        var name = equalPosition > -1 ? cookie.substr(0, equalPosition) : cookie;
+        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        // Try deleting any cookies set on the googleusercontent domain.
+        document.cookie =
+          name + "=;expires=Thu, 01 Jan 1970 00:00:01 GMT ;domain=.googleusercontent.com";
+    }
+  }
+
+  function clearStorage() {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch (e) {}
+  }
+</script>
+
+
+</body></html>
