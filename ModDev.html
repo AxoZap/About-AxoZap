@@ -15,7 +15,76 @@
     <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 
-<body>
+<body class="ModDev">
+    <nav class="navbar navbar-expand-md bg-dark mb-4" data-bs-theme="dark">
+        <div class="container-fluid"><button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navcol-1"><span class="visually-hidden">Toggle navigation</span><span class="navbar-toggler-icon"></span></button>
+            <div class="collapse navbar-collapse" id="navcol-1">
+                <ul class="navbar-nav w-100 justify-content-between align-items-center">
+                    <li class="nav-item fs-4"><a class="nav-link fs-1" href="index.html">AxoZap</a></li>
+                    <li class="nav-item fs-4"><a class="nav-link fs-2" href="UVA.html">UVA</a></li>
+                    <li class="nav-item fs-4"><a class="nav-link fs-2" href="HighSchool.html">High School</a></li>
+                    <li class="nav-item fs-4"><a class="nav-link fs-2" href="AxoMorph.html">Axomorph Idle</a></li>
+                    <li class="nav-item fs-4"><a class="nav-link active fs-2" href="ModDev.html">Development</a></li>
+                    <li class="nav-item fs-4"><a class="nav-link fs-2" href="Gaming.html">Gaming</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <section class="mx-10">
+        <h1 class="text-center d-flex justify-content-center">Side Development</h1>
+        <p class="fs-3 text-center my-4">This section will go into detail about side development projects I have throughout a few different video games that I play</p>
+        <h1 class="text-center d-flex justify-content-center mb-5">Celeste</h1>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h1 class="text-center d-flex justify-content-center">Endless Ascension</h1><img src="assets/img/EndlessAscension.jpg" width="504" height="283">
+                    <p class="fs-4 text-center mt-3">Endless Ascension is a mod that takes the original Celeste maps and makes you do them over and over again. With the help of Axo Helper, the main level rooms were copied over and over and have new unique strawberries, mini berries, and heart/moon berries.</p><a class="fs-4 text-center d-flex justify-content-center align-items-center" href="https://gamebanana.com/mods/566909">Game Banana Endless Ascension</a>
+                </div>
+                <div class="col-md-4">
+                    <h1 class="text-center d-flex justify-content-center">Celeste Seek</h1><img src="assets/img/CelesteSeek.webp" width="503" height="283">
+                    <p class="fs-4 text-center mt-3">Celeste Seek takes the original Celeste maps, and applies the madhunt concept to it. After selecting a level in the lobby, you can go into it and play hide and seek tag with your friends around the level! Includes custom levels as well</p><a class="fs-4 text-center d-flex justify-content-center align-items-center" href="https://gamebanana.com/mods/552677">Game Banana Celeste Seek</a>
+                </div>
+                <div class="col-md-4 text-center">
+                    <h1 class="text-center d-flex justify-content-center">Axo Helper</h1><img src="assets/img/AxoHelper.webp" width="442" height="283">
+                    <p class="fs-4 text-center mt-3">AxoHelper is a helper mod designed for Endless Ascension. It allows some bulk actions, using the Brokemia Helper Scripts but reimagined. It allows bulk copy, bulk paste, and bulk delete based on ID.<br><br></p><a class="fs-4 text-center d-flex justify-content-center align-items-center" href="https://gamebanana.com/tools/18767">Game Banana Axo Helper</a>
+                </div>
+            </div>
+        </div>
+    </section>
+    <hr>
+    <section class="mx-10">
+        <h1 class="text-center d-flex justify-content-center mt-2 mb-4">Terraria</h1>
+        <p class="fs-3 text-center">In Terraria, I created a mod called Dual Phoenixes, designed around the Yharon fight in Infernum Calamity</p>
+        <div class="container mt-4 mb-4">
+            <div class="row mb-4">
+                <div class="col"><img class="img-fluid" width="1920" height="1080" src="assets/img/DualPhoenixes1.png"></div>
+                <div class="col">
+                    <p class="fs-3">Dual Phoenixes was planned to create a 2nd phoenixes during the fight, which I named Axis. The point of the fight was to be my "Final Yharon Challenge" since I have done the fight hitless. <br><br>With the help of Gemini, I created a mod that added a new phoenixes, new phases, as well as a desperation phase. This fight was named Dual Phoenixes and was intended to be a buffed version of the original Yharon fight in Infernum.</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <p class="fs-3 text-start">After a while I got bored and decided that Axis should have his own fight, with this fight being after the final boss in Calamity. <br>This fight was harder to create, due to it being a unique fight and not a changed Yharon Infernum Fight.<br><br>After a long development, I finished a 12 phase fight against Axis, The Elemental Phoenix, with some aspects relating to the original fight but intended to be a new challenge for me to eventually take on.<br><br></p>
+                </div>
+                <div class="col"><img class="img-fluid" width="1920" height="1080" src="assets/img/DualPhoenixes2.png"></div>
+            </div>
+        </div><iframe class="aspect-ratio-16x9 position-relative d-block w-50 flex-column align-items-center mx-auto" allowfullscreen="" frameborder="0" src="https://www.youtube.com/embed/LbUw_Zc59cQ" width="60"></iframe>
+    </section>
+    <hr>
+    <section class="mx-10">
+        <h1 class="text-center d-flex justify-content-center">Geometry Dash</h1>
+        <p class="fs-3 text-center mb-4">The final big development I want to talk about is my "AxoZap Demons" website that I use to store what demons I beat in Geometry Dash.&nbsp;<br><br>Hosted at my website is a showcase of all the demons that I have beat in Geometry dash. Using Figma, I created a prototype that I expanded with myself and with the help of Gemini. This website would link to my Google Sheet and track demons between them, with me adding them, similar to Pointercrate.<br><br>After a long development, the website works, and with a Cloudflare hosting and backend D1 database and worker, the website tracks all of my demons, while also allowing me to edit or add more. Another feature is a geode mod for in game that directly sends a request and adds the demon to the website.&nbsp;<br><br>It has features such as rating type, special type, attempts, GDDL link, difficulty, and sorting and searching based on these criteria points.</p><a class="fs-2 d-flex justify-content-center align-items-center mb-5" href="https://gd.axozap.me">Link to Demons Website</a>
+        <div class="container">
+            <div class="row">
+                <div class="col-7"><img src="assets/img/AxoZapDemons.png" width="894" height="448">
+                    <p class="fs-4 text-center d-flex justify-content-center align-items-center">Demons Website</p>
+                </div>
+                <div class="col"><img class="img-fluid" width="1920" height="1080" src="assets/img/DemonsInGame.png">
+                    <p class="fs-4 text-center d-flex justify-content-center align-items-center">In-Game Demon Mod</p>
+                </div>
+            </div>
+        </div>
+    </section>
     <script src="assets/bootstrap/js/bootstrap.min.js"></script>
 </body>
 
