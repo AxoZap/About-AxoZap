@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "axozap-internships-backend",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-10",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "d1_databases": [
+    {
+      "binding": "axozap_internships_db",
+      "database_name": "axozap-internships-db",
+      "database_id": "3a7f6bff-1451-4595-887a-95597dca45d2"
+    }
+  ]
+}

@@ -1,3 +1,15 @@
 # Ignore all folders ending with _files anywhere in the project
 About-AxoZap.bsdesign
 *.bsdesign
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+*.local
+.wrangler/
+worker/.wrangler/
+Internships/node_modules/
+Internships/dist/
+Internships/worker/node_modules/
+Internships/worker/.wrangler/
