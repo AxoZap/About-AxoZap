@@ -22,7 +22,7 @@ const statusOptions: ApplicationStatus[] = [
 ];
 
 const workModels: WorkModel[] = ['Remote', 'Hybrid', 'On-site'];
-const seasons: TermSeason[] = ['Summer 2026', 'Spring 2026', 'Fall 2025', 'Summer 2025', 'Full-Time', 'Off-Season'];
+const seasons: TermSeason[] = ['Summer 2027', 'Fall 2027', 'Spring 2028', 'Summer 2028', 'Full-Time', 'Off-Season'];
 
 export const InternshipModal: React.FC<InternshipModalProps> = ({
   isOpen,
@@ -34,7 +34,7 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
   const [role, setRole] = useState('');
   const [location, setLocation] = useState('');
   const [workModel, setWorkModel] = useState<WorkModel>('Hybrid');
-  const [season, setSeason] = useState<TermSeason>('Summer 2026');
+  const [season, setSeason] = useState<TermSeason>('Summer 2027');
   const [status, setStatus] = useState<ApplicationStatus>('Applied');
   const [dateApplied, setDateApplied] = useState('');
   const [salary, setSalary] = useState('');
@@ -60,7 +60,7 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
       setRole('Software Engineer Intern');
       setLocation('San Francisco, CA');
       setWorkModel('Hybrid');
-      setSeason('Summer 2026');
+      setSeason('Summer 2027');
       setStatus('Applied');
       setDateApplied(new Date().toISOString().split('T')[0]);
       setSalary('');

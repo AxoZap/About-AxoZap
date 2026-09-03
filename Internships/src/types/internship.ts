@@ -11,7 +11,7 @@ export type ApplicationStatus =
 
 export type WorkModel = 'Remote' | 'Hybrid' | 'On-site';
 
-export type TermSeason = 'Summer 2025' | 'Fall 2025' | 'Spring 2026' | 'Summer 2026' | 'Off-Season' | 'Full-Time';
+export type TermSeason = 'Summer 2027' | 'Fall 2027' | 'Spring 2028' | 'Summer 2028' | 'Off-Season' | 'Full-Time';
 
 export interface Internship {
   id: string;

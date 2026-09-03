@@ -33,10 +33,10 @@ const statusOptions: ('All' | ApplicationStatus)[] = [
 
 const seasonOptions: ('All' | TermSeason)[] = [
   'All',
-  'Summer 2026',
-  'Spring 2026',
-  'Fall 2025',
-  'Summer 2025',
+  'Summer 2027',
+  'Fall 2027',
+  'Spring 2028',
+  'Summer 2028',
   'Full-Time',
   'Off-Season',
 ];
