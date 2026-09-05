@@ -34,8 +34,8 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
   }
 
   return (
-    <div className="bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
-      <div className="overflow-x-auto">
+    <div className="bg-slate-900/60 border border-slate-800 rounded-xl shadow-sm">
+      <div>
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-slate-800 bg-slate-900/80 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">

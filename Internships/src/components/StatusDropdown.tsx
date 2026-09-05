@@ -50,7 +50,7 @@ export const StatusDropdown: React.FC<StatusDropdownProps> = ({ status, onChange
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 mt-1.5 w-48 rounded-xl bg-slate-850 bg-slate-900 border border-slate-700 shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100">
+        <div className="absolute left-0 mt-1.5 w-48 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100">
           <div className="px-3 py-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
             Update Status
           </div>
