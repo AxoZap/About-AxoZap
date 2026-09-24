@@ -24,23 +24,17 @@ interface InternshipRow {
 
 const app = new Hono<{ Bindings: Bindings }>();
 
-// CORS middleware allowing requests from your domain
+// Allow the live site and local Vite development to call the API from browsers.
+const allowedOrigins = new Set([
+  "https://internships.axozap.com",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+]);
+
 app.use(
   "/*",
   cors({
-    origin: (origin) => {
-      // Allow localhost, internships.axozap.me, and axozap.me
-      if (!origin) return "*";
-      if (
-        origin.includes("localhost") ||
-        origin.endsWith("axozap.me") ||
-        origin.endsWith("workers.dev") ||
-        origin.endsWith("pages.dev")
-      ) {
-        return origin;
-      }
-      return "*";
-    },
+    origin: (origin) => allowedOrigins.has(origin) ? origin : null,
     allowHeaders: ["Content-Type", "Authorization"],
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     maxAge: 600,
