@@ -4,21 +4,19 @@ import {
   Bookmark, 
   Send, 
   Code2, 
-  CheckCircle2, 
   Calendar, 
-  Flame, 
   Trophy, 
   XCircle, 
   Ban 
 } from 'lucide-react';
 
 interface StatusBadgeProps {
-  status: ApplicationStatus;
+  status: ApplicationStatus | 'Rejected';
   size?: 'sm' | 'md';
 }
 
 export const statusConfig: Record<
-  ApplicationStatus,
+  ApplicationStatus | 'Rejected',
   { bg: string; text: string; border: string; dot: string; icon: React.ComponentType<{ className?: string }> }
 > = {
   'Bookmarked': {
@@ -35,33 +33,19 @@ export const statusConfig: Record<
     dot: 'bg-blue-400',
     icon: Send,
   },
-  'OA Received': {
+  'OA': {
     bg: 'bg-purple-950/40',
     text: 'text-purple-300',
     border: 'border-purple-800/50',
     dot: 'bg-purple-400',
     icon: Code2,
   },
-  'OA Completed': {
-    bg: 'bg-indigo-950/40',
-    text: 'text-indigo-300',
-    border: 'border-indigo-800/50',
-    dot: 'bg-indigo-400',
-    icon: CheckCircle2,
-  },
-  'Interview Scheduled': {
+  'Interview Round': {
     bg: 'bg-amber-950/40',
     text: 'text-amber-300',
     border: 'border-amber-800/50',
     dot: 'bg-amber-400',
     icon: Calendar,
-  },
-  'Final Round': {
-    bg: 'bg-orange-950/40',
-    text: 'text-orange-300',
-    border: 'border-orange-800/50',
-    dot: 'bg-orange-400',
-    icon: Flame,
   },
   'Offer': {
     bg: 'bg-emerald-950/50',

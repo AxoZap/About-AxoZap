@@ -112,7 +112,12 @@ export default function App() {
     const target = internships.find((i) => i.id === id);
     if (!target) return;
 
-    const updated = { ...target, status: newStatus, rejected: isRejected(target), updatedAt: now };
+    const updated = {
+      ...target,
+      status: newStatus,
+      interviewRound: newStatus === 'Interview Round' ? target.interviewRound : undefined,
+      updatedAt: now,
+    };
     setInternships((prev) =>
       prev.map((item) => (item.id === id ? updated : item))
     );
@@ -128,9 +133,31 @@ export default function App() {
     }
   };
 
+  const handleInterviewRoundChange = async (id: string, round: string) => {
+    const target = internships.find((item) => item.id === id);
+    if (!target || target.status !== 'Interview Round') return;
+
+    const updated = {
+      ...target,
+      interviewRound: round.trim() || undefined,
+      updatedAt: new Date().toISOString().split('T')[0],
+    };
+    setInternships((prev) => prev.map((item) => item.id === id ? updated : item));
+
+    try {
+      await fetch(`${API_URL}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ internship: updated }),
+      });
+    } catch (e) {
+      console.error('Failed to update interview round on backend', e);
+    }
+  };
+
   const handleRejectedChange = async (id: string) => {
     const target = internships.find((item) => item.id === id);
-    if (!target || target.status === 'Rejected') return;
+    if (!target) return;
 
     const updated = {
       ...target,
@@ -266,6 +293,7 @@ export default function App() {
         <InternshipTable
           internships={filteredInternships}
           onStatusChange={handleStatusChange}
+          onInterviewRoundChange={handleInterviewRoundChange}
           onRejectedChange={handleRejectedChange}
           onEdit={(internship) => {
             setEditingInternship(internship);

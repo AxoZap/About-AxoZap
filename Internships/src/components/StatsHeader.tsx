@@ -9,8 +9,8 @@ interface StatsHeaderProps {
 export const StatsHeader: React.FC<StatsHeaderProps> = ({ internships }) => {
   const total = internships.length;
   const active = internships.filter(i => !isRejected(i));
-  const pending = active.filter(i => ['Applied', 'OA Received', 'OA Completed'].includes(i.status)).length;
-  const interviews = active.filter(i => ['Interview Scheduled', 'Final Round'].includes(i.status)).length;
+  const pending = active.filter(i => ['Applied', 'OA'].includes(i.status)).length;
+  const interviews = active.filter(i => i.status === 'Interview Round').length;
   const offers = active.filter(i => i.status === 'Offer').length;
 
   return (

@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS internships (
   season TEXT,
   date_applied TEXT,
   status TEXT NOT NULL,
+  interview_round TEXT,
   rejected INTEGER NOT NULL DEFAULT 0,
   job_url TEXT,
   portal_url TEXT,

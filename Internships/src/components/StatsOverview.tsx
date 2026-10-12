@@ -11,10 +11,10 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ internships }) => 
   const total = internships.length;
   const applied = internships.filter(i => i.status !== 'Bookmarked').length;
   const active = internships.filter(i => !isRejected(i));
-  const interviews = active.filter(i => ['Interview Scheduled', 'Final Round'].includes(i.status)).length;
+  const interviews = active.filter(i => i.status === 'Interview Round').length;
   const offers = active.filter(i => i.status === 'Offer').length;
   const rejected = internships.filter(isRejected).length;
-  const pending = active.filter(i => ['Applied', 'OA Received', 'OA Completed'].includes(i.status)).length;
+  const pending = active.filter(i => ['Applied', 'OA'].includes(i.status)).length;
 
   const responseRate = applied > 0 ? Math.round(((interviews + offers + rejected) / applied) * 100) : 0;
   const interviewRate = applied > 0 ? Math.round(((interviews + offers) / applied) * 100) : 0;

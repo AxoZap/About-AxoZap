@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Building2, MapPin, DollarSign, Globe, FileText, Calendar } from 'lucide-react';
-import { Internship, ApplicationStatus, WorkModel, TermSeason } from '../types/internship';
+import { Internship, ApplicationStatus, applicationStatuses, WorkModel, TermSeason } from '../types/internship';
 
 interface InternshipModalProps {
   isOpen: boolean;
@@ -8,17 +8,6 @@ interface InternshipModalProps {
   onSave: (internship: Omit<Internship, 'id' | 'updatedAt'>, id?: string) => void;
   editingInternship?: Internship | null;
 }
-
-const statusOptions: ApplicationStatus[] = [
-  'Bookmarked',
-  'Applied',
-  'OA Received',
-  'OA Completed',
-  'Interview Scheduled',
-  'Final Round',
-  'Offer',
-  'Withdrawn',
-];
 
 const workModels: WorkModel[] = ['Remote', 'Hybrid', 'On-site'];
 const seasons: TermSeason[] = ['Summer 2027', 'Fall 2027', 'Spring 2028', 'Summer 2028', 'Full-Time', 'Off-Season'];
@@ -35,6 +24,7 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
   const [workModel, setWorkModel] = useState<WorkModel>('Hybrid');
   const [season, setSeason] = useState<TermSeason>('Summer 2027');
   const [status, setStatus] = useState<ApplicationStatus>('Applied');
+  const [interviewRound, setInterviewRound] = useState('');
   const [rejected, setRejected] = useState(false);
   const [dateApplied, setDateApplied] = useState('');
   const [salary, setSalary] = useState('');
@@ -50,7 +40,8 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
       setWorkModel(editingInternship.workModel);
       setSeason(editingInternship.season);
       setStatus(editingInternship.status);
-      setRejected(Boolean(editingInternship.rejected || editingInternship.status === 'Rejected'));
+      setInterviewRound(editingInternship.interviewRound || '');
+      setRejected(Boolean(editingInternship.rejected));
       setDateApplied(editingInternship.dateApplied);
       setSalary(editingInternship.salary || '');
       setJobUrl(editingInternship.jobUrl || '');
@@ -63,6 +54,7 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
       setWorkModel('Hybrid');
       setSeason('Summer 2027');
       setStatus('Applied');
+      setInterviewRound('');
       setRejected(false);
       setDateApplied(new Date().toISOString().split('T')[0]);
       setSalary('');
@@ -86,6 +78,7 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
         workModel,
         season,
         status,
+        interviewRound: status === 'Interview Round' ? interviewRound.trim() || undefined : undefined,
         rejected,
         dateApplied: dateApplied || new Date().toISOString().split('T')[0],
         salary: salary.trim() || undefined,
@@ -155,15 +148,12 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
                 onChange={(e) => setStatus(e.target.value as ApplicationStatus)}
                 className="w-full px-3.5 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-cyan-500 cursor-pointer"
               >
-                {(status === 'Rejected' ? ['Rejected' as ApplicationStatus, ...statusOptions] : statusOptions).map((s) => (
+                {applicationStatuses.map((s) => (
                   <option key={s} value={s} className="bg-slate-900">
                     {s}
                   </option>
                 ))}
               </select>
-              {status === 'Rejected' && (
-                <p className="text-[11px] text-slate-400 mt-1">Previous stage was not recorded. Choose a stage to replace this legacy value.</p>
-              )}
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
@@ -179,8 +169,22 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
             </div>
           </div>
 
+          {status === 'Interview Round' && (
+            <div>
+              <label htmlFor="interview-round" className="block text-xs font-semibold text-slate-300 mb-1.5">Interview Round</label>
+              <input
+                id="interview-round"
+                type="text"
+                value={interviewRound}
+                onChange={(e) => setInterviewRound(e.target.value)}
+                placeholder="e.g. Phone screen, Technical, Final"
+                className="w-full px-3.5 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+              />
+            </div>
+          )}
+
           <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-            <input type="checkbox" checked={rejected} disabled={status === 'Rejected'} onChange={(e) => setRejected(e.target.checked)} className="accent-rose-500 disabled:opacity-50" />
+            <input type="checkbox" checked={rejected} onChange={(e) => setRejected(e.target.checked)} className="accent-rose-500" />
             Rejected (show beside the application stage)
           </label>
 

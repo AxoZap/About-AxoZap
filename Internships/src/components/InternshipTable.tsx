@@ -16,6 +16,7 @@ import { isRejected } from '../utils/internship';
 interface InternshipTableProps {
   internships: Internship[];
   onStatusChange: (id: string, newStatus: ApplicationStatus) => void;
+  onInterviewRoundChange: (id: string, round: string) => void;
   onRejectedChange: (id: string) => void;
   onEdit: (internship: Internship) => void;
   onDelete: (id: string) => void;
@@ -24,6 +25,7 @@ interface InternshipTableProps {
 export const InternshipTable: React.FC<InternshipTableProps> = ({
   internships,
   onStatusChange,
+  onInterviewRoundChange,
   onRejectedChange,
   onEdit,
   onDelete,
@@ -94,9 +96,11 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
                   <div className="flex flex-wrap items-center gap-1.5">
                     <StatusDropdown
                       status={item.status}
+                      interviewRound={item.interviewRound}
                       onChange={(newStatus) => onStatusChange(item.id, newStatus)}
+                      onInterviewRoundChange={(round) => onInterviewRoundChange(item.id, round)}
                     />
-                    {isRejected(item) && item.status !== 'Rejected' && <StatusBadge status="Rejected" size="sm" />}
+                    {isRejected(item) && <StatusBadge status="Rejected" size="sm" />}
                   </div>
                 </td>
 
@@ -157,9 +161,8 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
                   <div className="flex items-center justify-end gap-1">
                     <button
                       onClick={() => onRejectedChange(item.id)}
-                      disabled={item.status === 'Rejected'}
-                      className={`px-2 py-1 rounded-lg text-xs font-medium transition-colors ${isRejected(item) ? 'text-rose-300 bg-rose-950/50 hover:bg-rose-900/50' : 'text-slate-400 hover:text-rose-300 hover:bg-slate-800'} disabled:opacity-50 disabled:cursor-not-allowed`}
-                      title={item.status === 'Rejected' ? 'Choose the previous stage before changing rejection' : isRejected(item) ? 'Undo rejection' : 'Mark as rejected'}
+                      className={`px-2 py-1 rounded-lg text-xs font-medium transition-colors ${isRejected(item) ? 'text-rose-300 bg-rose-950/50 hover:bg-rose-900/50' : 'text-slate-400 hover:text-rose-300 hover:bg-slate-800'}`}
+                      title={isRejected(item) ? 'Undo rejection' : 'Mark as rejected'}
                       aria-label={isRejected(item) ? 'Undo rejection' : 'Mark as rejected'}
                     >
                       <XCircle className="w-3.5 h-3.5 inline mr-1" />

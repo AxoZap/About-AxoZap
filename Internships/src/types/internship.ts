@@ -1,13 +1,13 @@
-export type ApplicationStatus =
-  | 'Bookmarked'
-  | 'Applied'
-  | 'OA Received'
-  | 'OA Completed'
-  | 'Interview Scheduled'
-  | 'Final Round'
-  | 'Offer'
-  | 'Rejected'
-  | 'Withdrawn';
+export const applicationStatuses = [
+  'Applied',
+  'OA',
+  'Interview Round',
+  'Offer',
+  'Withdrawn',
+  'Bookmarked',
+] as const;
+
+export type ApplicationStatus = typeof applicationStatuses[number];
 
 export type WorkModel = 'Remote' | 'Hybrid' | 'On-site';
 
@@ -22,6 +22,7 @@ export interface Internship {
   season: TermSeason;
   dateApplied: string; // YYYY-MM-DD
   status: ApplicationStatus;
+  interviewRound?: string;
   rejected?: boolean;
   jobUrl?: string;
   portalUrl?: string;

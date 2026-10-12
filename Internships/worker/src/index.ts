@@ -15,6 +15,7 @@ interface InternshipRow {
   season?: string;
   date_applied?: string;
   status: string;
+  interview_round?: string;
   rejected: number;
   job_url?: string;
   portal_url?: string;
@@ -53,7 +54,8 @@ function mapRowToModel(row: InternshipRow) {
     season: row.season || "Summer 2027",
     dateApplied: row.date_applied || "",
     status: row.status,
-    rejected: Boolean(row.rejected || row.status === "Rejected"),
+    interviewRound: row.interview_round || undefined,
+    rejected: Boolean(row.rejected),
     jobUrl: row.job_url || undefined,
     portalUrl: row.portal_url || undefined,
     salary: row.salary || undefined,
@@ -89,8 +91,8 @@ app.post("/api/internships", async (c) => {
 
   await c.env.axozap_internships_db
     .prepare(
-      `INSERT INTO internships (id, company, role, location, work_model, season, date_applied, status, rejected, job_url, portal_url, salary, notes, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO internships (id, company, role, location, work_model, season, date_applied, status, interview_round, rejected, job_url, portal_url, salary, notes, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(
       id,
@@ -101,7 +103,8 @@ app.post("/api/internships", async (c) => {
       internship.season || "Summer 2027",
       internship.dateApplied || now,
       internship.status || "Applied",
-      internship.rejected || internship.status === "Rejected" ? 1 : 0,
+      internship.status === "Interview Round" ? internship.interviewRound?.trim() || null : null,
+      internship.rejected ? 1 : 0,
       internship.jobUrl || null,
       internship.portalUrl || null,
       internship.salary || null,
@@ -136,6 +139,7 @@ app.put("/api/internships/:id", async (c) => {
          season = ?,
          date_applied = ?,
          status = ?,
+         interview_round = ?,
          rejected = ?,
          job_url = ?,
          portal_url = ?,
@@ -152,7 +156,8 @@ app.put("/api/internships/:id", async (c) => {
       internship.season || "Summer 2026",
       internship.dateApplied || now,
       internship.status || "Applied",
-      internship.rejected || internship.status === "Rejected" ? 1 : 0,
+      internship.status === "Interview Round" ? internship.interviewRound?.trim() || null : null,
+      internship.rejected ? 1 : 0,
       internship.jobUrl || null,
       internship.portalUrl || null,
       internship.salary || null,
