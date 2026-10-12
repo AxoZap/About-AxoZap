@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Building2, MapPin, DollarSign, Globe, FileText, Calendar } from 'lucide-react';
 import { Internship, ApplicationStatus, applicationStatuses, WorkModel, TermSeason } from '../types/internship';
+import { localDateString } from '../utils/date';
 
 interface InternshipModalProps {
   isOpen: boolean;
@@ -56,7 +57,7 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
       setStatus('Applied');
       setInterviewRound('');
       setRejected(false);
-      setDateApplied(new Date().toISOString().split('T')[0]);
+      setDateApplied(localDateString());
       setSalary('');
       setJobUrl('');
       setPortalUrl('');
@@ -80,7 +81,7 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
         status,
         interviewRound: status === 'Interview Round' ? interviewRound.trim() || undefined : undefined,
         rejected,
-        dateApplied: dateApplied || new Date().toISOString().split('T')[0],
+        dateApplied: dateApplied || localDateString(),
         salary: salary.trim() || undefined,
         jobUrl: jobUrl.trim() || undefined,
         portalUrl: portalUrl.trim() || undefined,

@@ -7,6 +7,7 @@ import { FilterBar } from './components/FilterBar';
 import { InternshipTable } from './components/InternshipTable';
 import { InternshipModal } from './components/InternshipModal';
 import { isRejected } from './utils/internship';
+import { localDateString } from './utils/date';
 
 const API_URL = "https://axozap-internships-backend.peteystillwell.workers.dev/api/internships";
 const STORAGE_KEY = 'axozap_internships_data';
@@ -63,7 +64,7 @@ export default function App() {
     data: Omit<Internship, 'id' | 'updatedAt'>,
     id?: string
   ) => {
-    const now = new Date().toISOString().split('T')[0];
+    const now = localDateString();
     if (id) {
       // Optimistic update
       const updated = { ...data, id, updatedAt: now };
@@ -108,7 +109,7 @@ export default function App() {
 
   // Quick inline status change
   const handleStatusChange = async (id: string, newStatus: ApplicationStatus) => {
-    const now = new Date().toISOString().split('T')[0];
+    const now = localDateString();
     const target = internships.find((i) => i.id === id);
     if (!target) return;
 
@@ -140,7 +141,7 @@ export default function App() {
     const updated = {
       ...target,
       interviewRound: round.trim() || undefined,
-      updatedAt: new Date().toISOString().split('T')[0],
+      updatedAt: localDateString(),
     };
     setInternships((prev) => prev.map((item) => item.id === id ? updated : item));
 
@@ -162,7 +163,7 @@ export default function App() {
     const updated = {
       ...target,
       rejected: !isRejected(target),
-      updatedAt: new Date().toISOString().split('T')[0],
+      updatedAt: localDateString(),
     };
     setInternships((prev) => prev.map((item) => item.id === id ? updated : item));
 
