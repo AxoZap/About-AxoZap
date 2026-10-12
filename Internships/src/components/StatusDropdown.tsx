@@ -15,7 +15,6 @@ const allStatuses: ApplicationStatus[] = [
   'Interview Scheduled',
   'Final Round',
   'Offer',
-  'Rejected',
   'Withdrawn',
   'Bookmarked',
 ];
@@ -42,7 +41,7 @@ export const StatusDropdown: React.FC<StatusDropdownProps> = ({ status, onChange
         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer text-xs"
         title="Change Status"
       >
-        {allStatuses.map((st) => (
+        {(status === 'Rejected' ? ['Rejected' as ApplicationStatus, ...allStatuses] : allStatuses).map((st) => (
           <option key={st} value={st} className="bg-slate-900 text-slate-100 py-1">
             {st}
           </option>

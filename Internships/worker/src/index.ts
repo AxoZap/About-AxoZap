@@ -15,6 +15,7 @@ interface InternshipRow {
   season?: string;
   date_applied?: string;
   status: string;
+  rejected: number;
   job_url?: string;
   portal_url?: string;
   salary?: string;
@@ -42,7 +43,7 @@ app.use(
 );
 
 // Map DB row (snake_case) to Frontend model (camelCase)
-function mapRowToModel(row: any) {
+function mapRowToModel(row: InternshipRow) {
   return {
     id: row.id,
     company: row.company,
@@ -52,6 +53,7 @@ function mapRowToModel(row: any) {
     season: row.season || "Summer 2027",
     dateApplied: row.date_applied || "",
     status: row.status,
+    rejected: Boolean(row.rejected || row.status === "Rejected"),
     jobUrl: row.job_url || undefined,
     portalUrl: row.portal_url || undefined,
     salary: row.salary || undefined,
@@ -67,7 +69,7 @@ app.get("/health", (c) => c.json({ status: "ok" }));
 app.get("/api/internships", async (c) => {
   const { results } = await c.env.axozap_internships_db
     .prepare("SELECT * FROM internships ORDER BY date_applied DESC, updated_at DESC")
-    .all();
+    .all<InternshipRow>();
 
   return c.json(results.map(mapRowToModel));
 });
@@ -87,8 +89,8 @@ app.post("/api/internships", async (c) => {
 
   await c.env.axozap_internships_db
     .prepare(
-      `INSERT INTO internships (id, company, role, location, work_model, season, date_applied, status, job_url, portal_url, salary, notes, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO internships (id, company, role, location, work_model, season, date_applied, status, rejected, job_url, portal_url, salary, notes, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(
       id,
@@ -99,6 +101,7 @@ app.post("/api/internships", async (c) => {
       internship.season || "Summer 2027",
       internship.dateApplied || now,
       internship.status || "Applied",
+      internship.rejected || internship.status === "Rejected" ? 1 : 0,
       internship.jobUrl || null,
       internship.portalUrl || null,
       internship.salary || null,
@@ -133,6 +136,7 @@ app.put("/api/internships/:id", async (c) => {
          season = ?,
          date_applied = ?,
          status = ?,
+         rejected = ?,
          job_url = ?,
          portal_url = ?,
          salary = ?,
@@ -148,6 +152,7 @@ app.put("/api/internships/:id", async (c) => {
       internship.season || "Summer 2026",
       internship.dateApplied || now,
       internship.status || "Applied",
+      internship.rejected || internship.status === "Rejected" ? 1 : 0,
       internship.jobUrl || null,
       internship.portalUrl || null,
       internship.salary || null,

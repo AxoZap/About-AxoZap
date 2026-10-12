@@ -17,7 +17,6 @@ const statusOptions: ApplicationStatus[] = [
   'Interview Scheduled',
   'Final Round',
   'Offer',
-  'Rejected',
   'Withdrawn',
 ];
 
@@ -36,6 +35,7 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
   const [workModel, setWorkModel] = useState<WorkModel>('Hybrid');
   const [season, setSeason] = useState<TermSeason>('Summer 2027');
   const [status, setStatus] = useState<ApplicationStatus>('Applied');
+  const [rejected, setRejected] = useState(false);
   const [dateApplied, setDateApplied] = useState('');
   const [salary, setSalary] = useState('');
   const [jobUrl, setJobUrl] = useState('');
@@ -50,6 +50,7 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
       setWorkModel(editingInternship.workModel);
       setSeason(editingInternship.season);
       setStatus(editingInternship.status);
+      setRejected(Boolean(editingInternship.rejected || editingInternship.status === 'Rejected'));
       setDateApplied(editingInternship.dateApplied);
       setSalary(editingInternship.salary || '');
       setJobUrl(editingInternship.jobUrl || '');
@@ -62,6 +63,7 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
       setWorkModel('Hybrid');
       setSeason('Summer 2027');
       setStatus('Applied');
+      setRejected(false);
       setDateApplied(new Date().toISOString().split('T')[0]);
       setSalary('');
       setJobUrl('');
@@ -84,6 +86,7 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
         workModel,
         season,
         status,
+        rejected,
         dateApplied: dateApplied || new Date().toISOString().split('T')[0],
         salary: salary.trim() || undefined,
         jobUrl: jobUrl.trim() || undefined,
@@ -152,12 +155,15 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
                 onChange={(e) => setStatus(e.target.value as ApplicationStatus)}
                 className="w-full px-3.5 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-cyan-500 cursor-pointer"
               >
-                {statusOptions.map((s) => (
+                {(status === 'Rejected' ? ['Rejected' as ApplicationStatus, ...statusOptions] : statusOptions).map((s) => (
                   <option key={s} value={s} className="bg-slate-900">
                     {s}
                   </option>
                 ))}
               </select>
+              {status === 'Rejected' && (
+                <p className="text-[11px] text-slate-400 mt-1">Previous stage was not recorded. Choose a stage to replace this legacy value.</p>
+              )}
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
@@ -172,6 +178,11 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
               />
             </div>
           </div>
+
+          <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+            <input type="checkbox" checked={rejected} disabled={status === 'Rejected'} onChange={(e) => setRejected(e.target.checked)} className="accent-rose-500 disabled:opacity-50" />
+            Rejected (show beside the application stage)
+          </label>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>

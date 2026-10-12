@@ -6,6 +6,7 @@ import { StatsHeader } from './components/StatsHeader';
 import { FilterBar } from './components/FilterBar';
 import { InternshipTable } from './components/InternshipTable';
 import { InternshipModal } from './components/InternshipModal';
+import { isRejected } from './utils/internship';
 
 const API_URL = "https://axozap-internships-backend.peteystillwell.workers.dev/api/internships";
 const STORAGE_KEY = 'axozap_internships_data';
@@ -111,7 +112,7 @@ export default function App() {
     const target = internships.find((i) => i.id === id);
     if (!target) return;
 
-    const updated = { ...target, status: newStatus, updatedAt: now };
+    const updated = { ...target, status: newStatus, rejected: isRejected(target), updatedAt: now };
     setInternships((prev) =>
       prev.map((item) => (item.id === id ? updated : item))
     );
@@ -124,6 +125,28 @@ export default function App() {
       });
     } catch (e) {
       console.error('Failed to update status on backend', e);
+    }
+  };
+
+  const handleRejectedChange = async (id: string) => {
+    const target = internships.find((item) => item.id === id);
+    if (!target || target.status === 'Rejected') return;
+
+    const updated = {
+      ...target,
+      rejected: !isRejected(target),
+      updatedAt: new Date().toISOString().split('T')[0],
+    };
+    setInternships((prev) => prev.map((item) => item.id === id ? updated : item));
+
+    try {
+      await fetch(`${API_URL}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ internship: updated }),
+      });
+    } catch (e) {
+      console.error('Failed to update rejection on backend', e);
     }
   };
 
@@ -165,7 +188,9 @@ export default function App() {
           if (!match) return false;
         }
 
-        if (statusFilter !== 'All' && item.status !== statusFilter) {
+        if (statusFilter === 'Rejected') {
+          if (!isRejected(item)) return false;
+        } else if (isRejected(item) || (statusFilter !== 'All' && item.status !== statusFilter)) {
           return false;
         }
 
@@ -241,6 +266,7 @@ export default function App() {
         <InternshipTable
           internships={filteredInternships}
           onStatusChange={handleStatusChange}
+          onRejectedChange={handleRejectedChange}
           onEdit={(internship) => {
             setEditingInternship(internship);
             setIsModalOpen(true);

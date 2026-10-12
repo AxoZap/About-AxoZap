@@ -1,5 +1,6 @@
 import React from 'react';
 import { Internship } from '../types/internship';
+import { isRejected } from '../utils/internship';
 
 interface StatsHeaderProps {
   internships: Internship[];
@@ -7,9 +8,10 @@ interface StatsHeaderProps {
 
 export const StatsHeader: React.FC<StatsHeaderProps> = ({ internships }) => {
   const total = internships.length;
-  const pending = internships.filter(i => ['Applied', 'OA Received', 'OA Completed'].includes(i.status)).length;
-  const interviews = internships.filter(i => ['Interview Scheduled', 'Final Round'].includes(i.status)).length;
-  const offers = internships.filter(i => i.status === 'Offer').length;
+  const active = internships.filter(i => !isRejected(i));
+  const pending = active.filter(i => ['Applied', 'OA Received', 'OA Completed'].includes(i.status)).length;
+  const interviews = active.filter(i => ['Interview Scheduled', 'Final Round'].includes(i.status)).length;
+  const offers = active.filter(i => i.status === 'Offer').length;
 
   return (
     <div className="flex flex-wrap items-center gap-6 py-3 px-4 rounded-xl bg-slate-900/60 border border-slate-800 text-sm mb-6">

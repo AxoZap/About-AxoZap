@@ -22,6 +22,7 @@ export interface Internship {
   season: TermSeason;
   dateApplied: string; // YYYY-MM-DD
   status: ApplicationStatus;
+  rejected?: boolean;
   jobUrl?: string;
   portalUrl?: string;
   salary?: string;
