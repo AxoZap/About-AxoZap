@@ -74,7 +74,16 @@ export async function onRequest(context) {
     .map(email => email.trim().toLowerCase())
     .filter(Boolean);
 
-    if (!PROTECTED_HOSTS.includes(url.hostname)) {
+    const PROTECTED_PATHS = [
+        "/",
+        "/UVA.html",
+        "/HighSchool.html"
+    ];
+
+    if (
+        !PROTECTED_HOSTS.includes(url.hostname) ||
+        !PROTECTED_PATHS.includes(url.pathname)
+    ) {
         return next();
     }
 
