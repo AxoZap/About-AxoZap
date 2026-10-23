@@ -1,10 +1,4 @@
 
-const { request, env, next } = context;
-const url = new URL(request.url);
-const ALLOWED_EMAILS = (env.ALLOWED_EMAILS || "")
-.split(",")
-.map(email => email.trim().toLowerCase())
-.filter(Boolean);
 
 const PROTECTED_HOSTS = [
     "axozap.com",
@@ -74,6 +68,11 @@ async function validToken(token, key) {
 export async function onRequest(context) {
     const { request, env, next } = context;
     const url = new URL(request.url);
+
+    const ALLOWED_EMAILS = (env.ALLOWED_EMAILS || "")
+    .split(",")
+    .map(email => email.trim().toLowerCase())
+    .filter(Boolean);
 
     if (!PROTECTED_HOSTS.includes(url.hostname)) {
         return next();
