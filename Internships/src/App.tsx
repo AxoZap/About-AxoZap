@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Plus } from 'lucide-react';
 import { Internship, ApplicationStatus } from './types/internship';
-import { initialInternships } from './data/mockData';
 import { StatsHeader } from './components/StatsHeader';
 import { FilterBar } from './components/FilterBar';
 import { InternshipTable } from './components/InternshipTable';
@@ -9,21 +8,20 @@ import { InternshipModal } from './components/InternshipModal';
 import { isRejected } from './utils/internship';
 import { localDateString } from './utils/date';
 
-const API_URL = "https://axozap-internships-backend.peteystillwell.workers.dev/api/internships";
-const STORAGE_KEY = 'axozap_internships_data';
+const API_URL = '/api/internships';
+
+async function apiRequest<T>(url: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(url, init);
+  if (!response.ok) {
+    throw new Error(response.status === 401 ? 'Your Access session has expired. Reload to sign in again.' : `Request failed (${response.status}).`);
+  }
+  return response.json() as Promise<T>;
+}
 
 export default function App() {
-  const [internships, setInternships] = useState<Internship[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to parse local storage data', e);
-      }
-    }
-    return initialInternships;
-  });
+  const [internships, setInternships] = useState<Internship[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -39,25 +37,36 @@ export default function App() {
   useEffect(() => {
     async function loadData() {
       try {
-        const res = await fetch(API_URL);
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
-            setInternships(data);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-          }
-        }
+        const data = await apiRequest<Internship[]>(API_URL);
+        if (!Array.isArray(data)) throw new Error('Unexpected response from the server.');
+        setInternships(data);
+        setError('');
       } catch (err) {
-        console.error('Error loading internships from backend:', err);
+        setError(err instanceof Error ? err.message : 'Could not load applications.');
+      } finally {
+        setLoading(false);
       }
     }
     loadData();
   }, []);
 
-  // Sync to localStorage
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(internships));
-  }, [internships]);
+  const updateInternship = async (internship: Internship) => {
+    const saved = await apiRequest<Internship>(`${API_URL}/${internship.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ internship }),
+    });
+    setInternships((prev) => prev.map((item) => item.id === saved.id ? saved : item));
+    setError('');
+  };
+
+  const saveQuickChange = async (internship: Internship) => {
+    try {
+      await updateInternship(internship);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save the change.');
+    }
+  };
 
   // Handle create or edit
   const handleSaveInternship = async (
@@ -65,45 +74,22 @@ export default function App() {
     id?: string
   ) => {
     const now = localDateString();
-    if (id) {
-      // Optimistic update
-      const updated = { ...data, id, updatedAt: now };
-      setInternships((prev) =>
-        prev.map((item) => (item.id === id ? updated : item))
-      );
-
-      try {
-        await fetch(`${API_URL}/${id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ internship: updated }),
-        });
-      } catch (e) {
-        console.error('Failed to update on backend', e);
-      }
-    } else {
-      const newEntry: Internship = {
-        ...data,
-        id: 'app-' + Date.now(),
-        updatedAt: now,
-      };
-      setInternships((prev) => [newEntry, ...prev]);
-
-      try {
-        const res = await fetch(API_URL, {
+    try {
+      if (id) {
+        await updateInternship({ ...data, id, updatedAt: now });
+      } else {
+        const internship = { ...data, id: crypto.randomUUID(), updatedAt: now };
+        const saved = await apiRequest<Internship>(API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ internship: newEntry }),
+          body: JSON.stringify({ internship }),
         });
-        if (res.ok) {
-          const serverEntry = await res.json();
-          setInternships((prev) =>
-            prev.map((item) => (item.id === newEntry.id ? serverEntry : item))
-          );
-        }
-      } catch (e) {
-        console.error('Failed to save to backend', e);
+        setInternships((prev) => [saved, ...prev]);
+        setError('');
       }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save the application.');
+      throw err;
     }
   };
 
@@ -119,19 +105,7 @@ export default function App() {
       interviewRound: newStatus === 'Interview Round' ? target.interviewRound : undefined,
       updatedAt: now,
     };
-    setInternships((prev) =>
-      prev.map((item) => (item.id === id ? updated : item))
-    );
-
-    try {
-      await fetch(`${API_URL}/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ internship: updated }),
-      });
-    } catch (e) {
-      console.error('Failed to update status on backend', e);
-    }
+    await saveQuickChange(updated);
   };
 
   const handleInterviewRoundChange = async (id: string, round: string) => {
@@ -143,17 +117,7 @@ export default function App() {
       interviewRound: round.trim() || undefined,
       updatedAt: localDateString(),
     };
-    setInternships((prev) => prev.map((item) => item.id === id ? updated : item));
-
-    try {
-      await fetch(`${API_URL}/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ internship: updated }),
-      });
-    } catch (e) {
-      console.error('Failed to update interview round on backend', e);
-    }
+    await saveQuickChange(updated);
   };
 
   const handleRejectedChange = async (id: string) => {
@@ -165,30 +129,19 @@ export default function App() {
       rejected: !isRejected(target),
       updatedAt: localDateString(),
     };
-    setInternships((prev) => prev.map((item) => item.id === id ? updated : item));
-
-    try {
-      await fetch(`${API_URL}/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ internship: updated }),
-      });
-    } catch (e) {
-      console.error('Failed to update rejection on backend', e);
-    }
+    await saveQuickChange(updated);
   };
 
   // Delete
   const handleDelete = async (id: string) => {
-    setInternships((prev) => prev.filter((item) => item.id !== id));
-
     try {
-      await fetch(`${API_URL}/${id}`, {
+      await apiRequest<{ success: boolean }>(`${API_URL}/${id}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
       });
-    } catch (e) {
-      console.error('Failed to delete on backend', e);
+      setInternships((prev) => prev.filter((item) => item.id !== id));
+      setError('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not delete the application.');
     }
   };
 
@@ -269,6 +222,9 @@ export default function App() {
             <span>Add Application</span>
           </button>
         </header>
+
+        {error && <div role="alert" className="mb-4 rounded-lg border border-rose-700 bg-rose-950/50 p-3 text-sm text-rose-200">{error}</div>}
+        {loading && <p className="mb-4 text-sm text-slate-400">Loading applications…</p>}
 
         {/* Natural Stats Bar */}
         <StatsHeader internships={internships} />

@@ -1,9 +1,10 @@
 import { Hono } from "hono";
-import { cors } from "hono/cors";
+import { createRemoteJWKSet, jwtVerify } from "jose";
 
 type Bindings = {
   axozap_internships_db: D1Database;
-  ADMIN_PASSWORD?: string;
+  CF_ACCESS_TEAM_DOMAIN: string;
+  CF_ACCESS_AUD: string;
 };
 
 interface InternshipRow {
@@ -26,22 +27,28 @@ interface InternshipRow {
 
 const app = new Hono<{ Bindings: Bindings }>();
 
-// Allow the live site and local Vite development to call the API from browsers.
-const allowedOrigins = new Set([
-  "https://internships.axozap.com",
-  "http://localhost:5173",
-  "http://127.0.0.1:5173",
-]);
+// The workers.dev URL is public, so every data request must verify Access itself.
+app.use("/api/*", async (c, next) => {
+  const issuer = c.env.CF_ACCESS_TEAM_DOMAIN;
+  const audience = c.env.CF_ACCESS_AUD;
+  if (!issuer || !audience) {
+    return c.json({ error: "Access is not configured" }, 503);
+  }
 
-app.use(
-  "/*",
-  cors({
-    origin: (origin) => allowedOrigins.has(origin) ? origin : null,
-    allowHeaders: ["Content-Type", "Authorization"],
-    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    maxAge: 600,
-  })
-);
+  const token = c.req.header("Cf-Access-Jwt-Assertion");
+  if (!token) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  try {
+    const jwks = createRemoteJWKSet(new URL(`${issuer}/cdn-cgi/access/certs`));
+    await jwtVerify(token, jwks, { issuer, audience, algorithms: ["RS256"] });
+  } catch {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  await next();
+});
 
 // Map DB row (snake_case) to Frontend model (camelCase)
 function mapRowToModel(row: InternshipRow) {
@@ -79,12 +86,7 @@ app.get("/api/internships", async (c) => {
 // POST: Add new internship
 app.post("/api/internships", async (c) => {
   const body = await c.req.json();
-  const { password, internship } = body;
-
-  const adminPw = c.env.ADMIN_PASSWORD;
-  if (adminPw && password !== adminPw) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
+  const { internship } = body;
 
   const id = internship.id || "app-" + Date.now();
   const now = new Date().toISOString().split("T")[0];
@@ -120,12 +122,7 @@ app.post("/api/internships", async (c) => {
 app.put("/api/internships/:id", async (c) => {
   const id = c.req.param("id");
   const body = await c.req.json();
-  const { password, internship } = body;
-
-  const adminPw = c.env.ADMIN_PASSWORD;
-  if (adminPw && password !== adminPw) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
+  const { internship } = body;
 
   const now = new Date().toISOString().split("T")[0];
 
@@ -173,14 +170,6 @@ app.put("/api/internships/:id", async (c) => {
 // DELETE: Remove an internship
 app.delete("/api/internships/:id", async (c) => {
   const id = c.req.param("id");
-  const body = await c.req.json().catch(() => ({}));
-  const { password } = body;
-
-  const adminPw = c.env.ADMIN_PASSWORD;
-  if (adminPw && password !== adminPw) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
-
   await c.env.axozap_internships_db
     .prepare("DELETE FROM internships WHERE id = ?")
     .bind(id)

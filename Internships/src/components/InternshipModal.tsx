@@ -6,7 +6,7 @@ import { localDateString } from '../utils/date';
 interface InternshipModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (internship: Omit<Internship, 'id' | 'updatedAt'>, id?: string) => void;
+  onSave: (internship: Omit<Internship, 'id' | 'updatedAt'>, id?: string) => Promise<void>;
   editingInternship?: Internship | null;
 }
 
@@ -67,29 +67,33 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!company.trim() || !role.trim()) return;
 
-    onSave(
-      {
-        company: company.trim(),
-        role: role.trim(),
-        location: location.trim() || 'Remote',
-        workModel,
-        season,
-        status,
-        interviewRound: status === 'Interview Round' ? interviewRound.trim() || undefined : undefined,
-        rejected,
-        dateApplied: dateApplied || localDateString(),
-        salary: salary.trim() || undefined,
-        jobUrl: jobUrl.trim() || undefined,
-        portalUrl: portalUrl.trim() || undefined,
-        notes: notes.trim() || undefined,
-      },
-      editingInternship ? editingInternship.id : undefined
-    );
-    onClose();
+    try {
+      await onSave(
+        {
+          company: company.trim(),
+          role: role.trim(),
+          location: location.trim() || 'Remote',
+          workModel,
+          season,
+          status,
+          interviewRound: status === 'Interview Round' ? interviewRound.trim() || undefined : undefined,
+          rejected,
+          dateApplied: dateApplied || localDateString(),
+          salary: salary.trim() || undefined,
+          jobUrl: jobUrl.trim() || undefined,
+          portalUrl: portalUrl.trim() || undefined,
+          notes: notes.trim() || undefined,
+        },
+        editingInternship ? editingInternship.id : undefined
+      );
+      onClose();
+    } catch {
+      // Keep the form open so the user can retry after the error shown above.
+    }
   };
 
   return (

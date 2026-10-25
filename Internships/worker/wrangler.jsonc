@@ -6,6 +6,10 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
+  "vars": {
+    "CF_ACCESS_TEAM_DOMAIN": "https://axozapteam.cloudflareaccess.com",
+    "CF_ACCESS_AUD": "d3ccb92bdc7e98e7632c2f93f675554a3741935acad2fb1667ae48fe8b6f"
+  },
   "d1_databases": [
     {
       "binding": "axozap_internships_db",
