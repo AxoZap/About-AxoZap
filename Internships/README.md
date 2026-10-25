@@ -7,3 +7,5 @@ The Worker configuration in `worker/wrangler.jsonc` contains the non-secret Acce
 Deploy the Worker with `cd worker && npm ci --legacy-peer-deps && npm run deploy`. Push the `Internships` changes to the repository's `main` branch to trigger the existing Cloudflare Pages Git deployment. Deploy both parts together: the site now calls `/api/internships`, and the Worker now requires the JWT forwarded by that route.
 
 Cloudflare Access JWT validation: https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json/
+
+The small **SQL** button in **Add Application** reveals a SQL editor. Its `/api/sql` endpoint verifies Access and permits only the configured `SQL_OWNER_EMAIL`, from `SQL_ALLOWED_ORIGIN`. Multiple ordinary SQLite statements run together as an atomic batch; query output is capped at 100 displayed rows per statement. Use the D1 console for trigger definitions. Run the local endpoint tests with `cd worker && npm test`.

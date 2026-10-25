@@ -1,10 +1,13 @@
 import { Hono } from "hono";
 import { createRemoteJWKSet, jwtVerify } from "jose";
+import { readSql, splitSql } from "./sql";
 
 type Bindings = {
   axozap_internships_db: D1Database;
   CF_ACCESS_TEAM_DOMAIN: string;
   CF_ACCESS_AUD: string;
+  SQL_OWNER_EMAIL: string;
+  SQL_ALLOWED_ORIGIN: string;
 };
 
 interface InternshipRow {
@@ -25,7 +28,7 @@ interface InternshipRow {
   updated_at?: string;
 }
 
-const app = new Hono<{ Bindings: Bindings }>();
+const app = new Hono<{ Bindings: Bindings; Variables: { accessEmail: string } }>();
 
 // The workers.dev URL is public, so every data request must verify Access itself.
 app.use("/api/*", async (c, next) => {
@@ -42,7 +45,8 @@ app.use("/api/*", async (c, next) => {
 
   try {
     const jwks = createRemoteJWKSet(new URL(`${issuer}/cdn-cgi/access/certs`));
-    await jwtVerify(token, jwks, { issuer, audience, algorithms: ["RS256"] });
+    const { payload } = await jwtVerify(token, jwks, { issuer, audience, algorithms: ["RS256"] });
+    c.set("accessEmail", typeof payload.email === "string" ? payload.email.toLowerCase() : "");
   } catch {
     return c.json({ error: "Unauthorized" }, 401);
   }
@@ -73,6 +77,27 @@ function mapRowToModel(row: InternshipRow) {
 
 // Health check
 app.get("/health", (c) => c.json({ status: "ok" }));
+
+app.post("/api/sql", async (c) => {
+  c.header("Cache-Control", "no-store");
+  if (!c.env.SQL_OWNER_EMAIL || !c.env.SQL_ALLOWED_ORIGIN) return c.json({ error: "SQL runner is not configured" }, 503);
+  if (c.get("accessEmail") !== c.env.SQL_OWNER_EMAIL.toLowerCase()) return c.json({ error: "Only the tracker owner can run SQL" }, 403);
+  if (c.req.header("Origin") !== c.env.SQL_ALLOWED_ORIGIN) return c.json({ error: "Invalid request origin" }, 403);
+  if (c.req.header("Content-Type")?.split(";")[0].trim().toLowerCase() !== "application/json") return c.json({ error: "Expected JSON" }, 415);
+  try {
+    const statements = splitSql(await readSql(c.req.raw));
+    // A batch is atomic: a failed statement rolls back all changes in this run.
+    const results = await c.env.axozap_internships_db.batch(statements.map(sql => c.env.axozap_internships_db.prepare(sql)));
+    return c.json({
+      statements: results.length,
+      changes: results.reduce((sum, result) => sum + result.meta.changes, 0),
+      results: results.map(result => result.results.slice(0, 100)),
+      truncated: results.some(result => result.results.length > 100),
+    });
+  } catch (error) {
+    return c.json({ error: error instanceof Error ? error.message.slice(0, 500) : "SQL could not be run" }, 400);
+  }
+});
 
 // GET: Fetch all internships
 app.get("/api/internships", async (c) => {

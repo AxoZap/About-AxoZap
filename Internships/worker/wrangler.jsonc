@@ -8,7 +8,9 @@
   ],
   "vars": {
     "CF_ACCESS_TEAM_DOMAIN": "https://axozapteam.cloudflareaccess.com",
-    "CF_ACCESS_AUD": "d3ccb92bdc7e98e7632c2cce2f93f675554a3741935acad2fb1667ae48fe8b6f"
+    "CF_ACCESS_AUD": "d3ccb92bdc7e98e7632c2cce2f93f675554a3741935acad2fb1667ae48fe8b6f",
+    "SQL_OWNER_EMAIL": "AxoZap14@gmail.com",
+    "SQL_ALLOWED_ORIGIN": "https://internships.axozap.com"
   },
   "d1_databases": [
     {

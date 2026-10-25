@@ -60,6 +60,13 @@ export default function App() {
     setError('');
   };
 
+  const refreshAfterSql = async () => {
+    const data = await apiRequest<Internship[]>(API_URL);
+    if (!Array.isArray(data)) throw new Error('Unexpected response from the server.');
+    setInternships(data);
+    setError('');
+  };
+
   const saveQuickChange = async (internship: Internship) => {
     try {
       await updateInternship(internship);
@@ -268,6 +275,7 @@ export default function App() {
           setEditingInternship(null);
         }}
         onSave={handleSaveInternship}
+        onSqlExecuted={refreshAfterSql}
         editingInternship={editingInternship}
       />
     </div>
