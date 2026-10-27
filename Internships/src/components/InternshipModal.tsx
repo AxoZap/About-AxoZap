@@ -162,6 +162,19 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4 text-sm">
+          {!!editingInternship?.statusHistory?.length && (
+            <details className="rounded-xl border border-slate-700 px-3 py-2 text-xs text-slate-300">
+              <summary className="cursor-pointer font-medium">Status history ({editingInternship.statusHistory.length})</summary>
+              <ol className="mt-3 space-y-2 border-l border-slate-700 pl-3">
+                {editingInternship.statusHistory.map((entry, index) => (
+                  <li key={index}>
+                    <div>{entry.status}{entry.interviewRound ? ` · ${entry.interviewRound}` : ''}{entry.rejected ? ' · Rejected' : ''}</div>
+                    <div className="mt-0.5 text-[10px] text-slate-500">{new Date(entry.recordedAt).toLocaleString()}{entry.baseline ? ' · First recorded; earlier stages unknown' : ''}</div>
+                  </li>
+                ))}
+              </ol>
+            </details>
+          )}
           {showSql && !editingInternship && (
             <section id="application-sql-panel" className="rounded-xl border border-slate-700 bg-slate-950/60 p-3 space-y-2">
               <label htmlFor="application-sql" className="block text-xs font-semibold text-slate-300">Run SQL</label>

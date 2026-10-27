@@ -9,6 +9,14 @@ export const applicationStatuses = [
 
 export type ApplicationStatus = typeof applicationStatuses[number];
 
+export interface StatusHistoryEntry {
+  status: ApplicationStatus;
+  interviewRound?: string;
+  rejected: boolean;
+  recordedAt: string;
+  baseline: boolean;
+}
+
 export type WorkModel = 'Remote' | 'Hybrid' | 'On-site';
 
 export type TermSeason = 'Summer 2027' | 'Fall 2027' | 'Spring 2028' | 'Summer 2028' | 'Off-Season' | 'Full-Time';
@@ -24,6 +32,7 @@ export interface Internship {
   status: ApplicationStatus;
   interviewRound?: string;
   rejected?: boolean;
+  statusHistory?: StatusHistoryEntry[];
   jobUrl?: string;
   portalUrl?: string;
   salary?: string;

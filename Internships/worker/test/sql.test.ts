@@ -1,5 +1,5 @@
 import { env } from "cloudflare:workers";
-import { createExecutionContext, reset, waitOnExecutionContext } from "cloudflare:test";
+import { applyD1Migrations, createExecutionContext, reset, waitOnExecutionContext, type D1Migration } from "cloudflare:test";
 import { afterEach, beforeAll, beforeEach, expect, it, vi } from "vitest";
 import { exportJWK, generateKeyPair, SignJWT } from "jose";
 import app from "../src/index";
@@ -12,6 +12,7 @@ let publicKey: Record<string, unknown>;
 const bindings = env as {
   axozap_internships_db: D1Database; CF_ACCESS_TEAM_DOMAIN: string; CF_ACCESS_AUD: string;
   SQL_OWNER_EMAIL: string; SQL_ALLOWED_ORIGIN: string;
+  TEST_MIGRATIONS: D1Migration[];
 };
 beforeAll(async () => {
   keys = await generateKeyPair("RS256", { extractable: true });
@@ -20,6 +21,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   await reset();
   await bindings.axozap_internships_db.prepare(schema).run();
+  await applyD1Migrations(bindings.axozap_internships_db, bindings.TEST_MIGRATIONS);
   vi.spyOn(globalThis, "fetch").mockImplementation(async () => Response.json({ keys: [publicKey] }));
 });
 afterEach(() => vi.restoreAllMocks());

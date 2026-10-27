@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { Download, X } from 'lucide-react';
 import type { Internship } from '../types/internship';
-import { buildApplicationFlow } from '../utils/applicationFlow';
+import { buildApplicationFlow, layoutApplicationFlow } from '../utils/applicationFlow';
 
 interface ApplicationFlowModalProps {
   internships: Internship[];
@@ -49,31 +49,7 @@ export function ApplicationFlowModal({ internships, onClose }: ApplicationFlowMo
     };
   }, [onClose]);
 
-  const unit = flow.total ? Math.min(6, 200 / flow.total) : 0;
-  function column<T extends { count: number }>(items: T[]) {
-    const slots = items.map(item => Math.max(24, item.count * unit));
-    const span = slots.reduce((total, slot) => total + slot, 0) + Math.max(0, items.length - 1) * 18;
-    return { slots, span };
-  }
-  const stageColumn = column(flow.groups);
-  const outcomeColumn = column(flow.outcomes);
-  const span = Math.max(200, stageColumn.span, outcomeColumn.span);
-  function position<T extends { count: number }>(items: T[], layout: { slots: number[]; span: number }) {
-    let cursor = 60 + (span - layout.span) / 2;
-    return items.map((item, index) => {
-      const height = item.count * unit;
-      const y = cursor + (layout.slots[index] - height) / 2;
-      cursor += layout.slots[index] + 18;
-      return { ...item, y, height };
-    });
-  }
-  const groups = position(flow.groups, stageColumn);
-  const outcomes = position(flow.outcomes, outcomeColumn);
-  const targets = new Map(outcomes.map(outcome => [outcome.key, outcome.y]));
-  const height = span + 100;
-  const rootHeight = flow.total * unit;
-  const rootY = 60 + (span - rootHeight) / 2;
-  let rootOffset = rootY;
+  const layout = useMemo(() => layoutApplicationFlow(flow), [flow]);
 
   function downloadSvg() {
     if (!svgRef.current) return;
@@ -92,7 +68,7 @@ export function ApplicationFlowModal({ internships, onClose }: ApplicationFlowMo
         <div className="flex items-start justify-between gap-3 p-5">
           <div>
             <h2 id="application-flow-title" className="text-lg font-semibold text-white">Application flow</h2>
-            <p id="application-flow-description" className="mt-1 text-xs leading-relaxed text-slate-400">All applications, including rejections. Status shows the furthest recorded stage.</p>
+            <p id="application-flow-description" className="mt-1 text-xs leading-relaxed text-slate-400">Recorded stage changes, including skipped stages and rejections.</p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {flow.total > 0 && <button onClick={downloadSvg} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 px-2.5 py-1.5 text-xs text-slate-200 hover:bg-slate-800"><Download className="h-3.5 w-3.5" /><span className="hidden sm:inline">Download SVG</span><span className="sr-only sm:hidden">Download SVG</span></button>}
@@ -100,43 +76,32 @@ export function ApplicationFlowModal({ internships, onClose }: ApplicationFlowMo
           </div>
         </div>
         {flow.total > 0 ? <div className="mx-3 overflow-x-auto rounded-xl bg-white sm:mx-5">
-          <svg ref={svgRef} xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 1050 ${height}`} width="1050" height={height} role="img" aria-labelledby="flow-svg-title flow-svg-description" style={{ width: '100%', minWidth: 800, height: 'auto', fontFamily: 'Arial, sans-serif' }}>
+          <svg ref={svgRef} xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 ${layout.width} ${layout.height}`} width={layout.width} height={layout.height} role="img" aria-labelledby="flow-svg-title flow-svg-description" style={{ width: '100%', minWidth: Math.max(800, layout.width * 0.75), height: 'auto', fontFamily: 'Arial, sans-serif' }}>
             <title id="flow-svg-title">Internship application flow: {flow.total} applications</title>
-            <desc id="flow-svg-description">Applications grouped by furthest recorded stage, then rejection outcome. {flow.groups.map(group => `${group.label}: ${group.count}; ${group.outcomes.map(outcome => `${outcome.label}: ${outcome.count}`).join(', ')}`).join('. ')}. {flow.bookmarked} bookmarks excluded.</desc>
-            <rect width="1050" height={height} fill="white" />
+            <desc id="flow-svg-description">Recorded application paths. {layout.links.map(link => `${link.sourceNode.label} to ${link.targetNode.label}: ${link.count}`).join('. ')}. {flow.baseline} applications have unknown earlier history. {flow.bookmarked} bookmarks excluded.</desc>
+            <rect width={layout.width} height={layout.height} fill="white" />
             <g fill="#64748b" fontSize="11" letterSpacing="1.5">
               <text x="24" y="32">APPLICATIONS</text>
-              <text x="450" y="32">FURTHEST STAGE</text>
-              <text x="730" y="32">OUTCOME</text>
+              <text x="400" y="32">RECORDED PROGRESS</text>
+              <text x={layout.width - 270} y="32">OUTCOME</text>
             </g>
-            {groups.map(group => {
-              const sourceY = rootOffset;
-              rootOffset += group.height;
-              let stageOffset = group.y;
-              return <g key={group.status}>
-                <path d={ribbon(174, sourceY, 450, group.y, group.height)} fill={group.color} fillOpacity="0.35"><title>{group.label}: {group.count}</title></path>
-                {group.outcomes.map(outcome => {
-                  const start = stageOffset;
-                  const bandHeight = outcome.count * unit;
-                  stageOffset = start + bandHeight;
-                  const targetY = targets.get(outcome.key)!;
-                  targets.set(outcome.key, targetY + bandHeight);
-                  return <path key={outcome.key} d={ribbon(464, start, 730, targetY, bandHeight)} fill={group.color} fillOpacity="0.35"><title>{group.label} → {outcome.label}: {outcome.count}</title></path>;
-                })}
-                <rect x="450" y={group.y} width="14" height={group.height} fill={group.color} />
-              </g>;
-            })}
-            {outcomes.map(outcome => <rect key={outcome.key} x="730" y={outcome.y} width="14" height={outcome.height} fill={outcome.color} />)}
-            <rect x="160" y={rootY} width="14" height={rootHeight} fill="#94a3b8" />
+            {layout.links.map(link => <path
+              key={JSON.stringify([link.source, link.target])}
+              d={ribbon(link.sourceNode.x + 14, link.sourceY, link.targetNode.x, link.targetY, link.height)}
+              fill={link.sourceNode.kind === 'root' ? link.targetNode.color : link.sourceNode.color} fillOpacity="0.35"
+            ><title>{link.sourceNode.label} → {link.targetNode.label}: {link.count}</title></path>)}
+            {layout.nodes.map(node => <rect key={node.key} x={node.x} y={node.y} width="14" height={node.height} fill={node.color} />)}
             <g fill="#1e293b" fontSize="14" stroke="white" strokeWidth="4" paintOrder="stroke" strokeLinejoin="round">
-              <text x="24" y={rootY + rootHeight / 2 - 3}>Applications</text>
-              <text x="24" y={rootY + rootHeight / 2 + 18} fontWeight="bold">{flow.total}</text>
-              {groups.map(group => <text key={group.status} x="476" y={group.y + group.height / 2 + 5}>{group.label} ({group.count})</text>)}
-              {outcomes.map(outcome => <text key={outcome.key} x="756" y={outcome.y + outcome.height / 2 + 5}>{outcome.label} ({outcome.count})</text>)}
+              {layout.nodes.map(node => node.kind === 'root' ? <g key={node.key}>
+                <text x="24" y={node.y + node.height / 2 - 3}>Applications</text>
+                <text x="24" y={node.y + node.height / 2 + 18} fontWeight="bold">{flow.total}</text>
+              </g> : <text key={node.key} x={node.x + 26} y={node.y + node.height / 2 + 5}>
+                <title>{node.label} ({node.count})</title>{node.label.length > 25 ? `${node.label.slice(0, 24)}…` : node.label} ({node.count})
+              </text>)}
             </g>
           </svg>
         </div> : <div className="mx-5 rounded-xl border border-dashed border-slate-700 p-12 text-center text-sm text-slate-400">Add an application to generate a diagram.</div>}
-        <p className="px-5 py-4 text-xs leading-relaxed text-slate-400">{flow.bookmarked > 0 ? `${flow.bookmarked} bookmarked ${flow.bookmarked === 1 ? 'position' : 'positions'} excluded. ` : ''}Band widths show application counts. Rejections from every stage join one endpoint; hover a band for its count.</p>
+        <p className="px-5 py-4 text-xs leading-relaxed text-slate-400">{flow.bookmarked > 0 ? `${flow.bookmarked} bookmarked ${flow.bookmarked === 1 ? 'position' : 'positions'} excluded. ` : ''}Band widths show counts. Skipped stages connect directly; all rejections join one endpoint. Hover a band for details.{flow.baseline > 0 && ` Earlier stages for ${flow.baseline} existing ${flow.baseline === 1 ? 'application were' : 'applications were'} not saved; ${flow.baseline === 1 ? 'its path starts' : 'their paths start'} at the first recorded status.`}</p>
       </div>
     </div>
   );

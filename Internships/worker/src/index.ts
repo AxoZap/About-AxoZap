@@ -26,6 +26,27 @@ interface InternshipRow {
   salary?: string;
   notes?: string;
   updated_at?: string;
+  history_json?: string;
+}
+
+interface StatusHistoryRow {
+  status: string;
+  interview_round: string | null;
+  rejected: number;
+  recorded_at: string;
+  baseline: number;
+}
+
+const selectInternships = `SELECT i.*, (
+  SELECT json_group_array(json_object(
+    'status', h.status, 'interview_round', h.interview_round,
+    'rejected', h.rejected, 'recorded_at', h.recorded_at, 'baseline', h.baseline
+  )) FROM (SELECT * FROM internship_status_history WHERE internship_id = i.id ORDER BY sequence) h
+) AS history_json FROM internships i`;
+
+async function storedInternship(db: D1Database, id: string) {
+  const row = await db.prepare(`${selectInternships} WHERE i.id = ?`).bind(id).first<InternshipRow>();
+  return row ? mapRowToModel(row) : null;
 }
 
 const app = new Hono<{ Bindings: Bindings; Variables: { accessEmail: string } }>();
@@ -72,6 +93,13 @@ function mapRowToModel(row: InternshipRow) {
     salary: row.salary || undefined,
     notes: row.notes || undefined,
     updatedAt: row.updated_at || "",
+    statusHistory: (JSON.parse(row.history_json || "[]") as StatusHistoryRow[]).map(entry => ({
+      status: entry.status,
+      interviewRound: entry.interview_round || undefined,
+      rejected: Boolean(entry.rejected),
+      recordedAt: entry.recorded_at,
+      baseline: Boolean(entry.baseline),
+    })),
   };
 }
 
@@ -102,7 +130,7 @@ app.post("/api/sql", async (c) => {
 // GET: Fetch all internships
 app.get("/api/internships", async (c) => {
   const { results } = await c.env.axozap_internships_db
-    .prepare("SELECT * FROM internships ORDER BY date_applied DESC, updated_at DESC")
+    .prepare(`${selectInternships} ORDER BY i.date_applied DESC, i.updated_at DESC`)
     .all<InternshipRow>();
 
   return c.json(results.map(mapRowToModel));
@@ -140,7 +168,7 @@ app.post("/api/internships", async (c) => {
     )
     .run();
 
-  return c.json({ ...internship, id, updatedAt: now });
+  return c.json(await storedInternship(c.env.axozap_internships_db, id));
 });
 
 // PUT: Update an existing internship
@@ -175,7 +203,7 @@ app.put("/api/internships/:id", async (c) => {
       internship.role,
       internship.location || "",
       internship.workModel || "Hybrid",
-      internship.season || "Summer 2026",
+      internship.season || "Summer 2027",
       internship.dateApplied || now,
       internship.status || "Applied",
       internship.status === "Interview Round" ? internship.interviewRound?.trim() || null : null,
@@ -189,7 +217,9 @@ app.put("/api/internships/:id", async (c) => {
     )
     .run();
 
-  return c.json({ ...internship, id, updatedAt: now });
+  const saved = await storedInternship(c.env.axozap_internships_db, id);
+  if (!saved) return c.json({ error: "Application not found" }, 404);
+  return c.json(saved);
 });
 
 // DELETE: Remove an internship
