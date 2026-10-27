@@ -14,7 +14,8 @@ const API_URL = '/api/internships';
 async function apiRequest<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, init);
   if (!response.ok) {
-    throw new Error(response.status === 401 ? 'Your Access session has expired. Reload to sign in again.' : `Request failed (${response.status}).`);
+    const body = await response.json().catch(() => null);
+    throw new Error(response.status === 401 ? 'Your Access session has expired. Reload to sign in again.' : body?.error || `Request failed (${response.status}).`);
   }
   return response.json() as Promise<T>;
 }

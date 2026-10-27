@@ -11,7 +11,7 @@ import {
 import { Internship, ApplicationStatus } from '../types/internship';
 import { StatusDropdown } from './StatusDropdown';
 import { StatusBadge } from './StatusBadge';
-import { isRejected } from '../utils/internship';
+import { isRejected, hasProgressedPastApplied } from '../utils/internship';
 
 interface InternshipTableProps {
   internships: Internship[];
@@ -96,6 +96,7 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
                   <div className="flex flex-wrap items-center gap-1.5">
                     <StatusDropdown
                       status={item.status}
+                      appliedDisabled={hasProgressedPastApplied(item)}
                       interviewRound={item.interviewRound}
                       onChange={(newStatus) => onStatusChange(item.id, newStatus)}
                       onInterviewRoundChange={(round) => onInterviewRoundChange(item.id, round)}

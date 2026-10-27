@@ -8,20 +8,21 @@ import schema from '../schema.sql?raw';
 const bindings = env as { axozap_internships_db: D1Database; TEST_MIGRATIONS: D1Migration[]; CF_ACCESS_TEAM_DOMAIN: string; CF_ACCESS_AUD: string; SQL_OWNER_EMAIL: string; SQL_ALLOWED_ORIGIN: string };
 const db = bindings.axozap_internships_db;
 const migrate = () => applyD1Migrations(db, bindings.TEST_MIGRATIONS);
-const history = () => db.prepare('SELECT status, interview_round, rejected, baseline, recorded_at FROM internship_status_history ORDER BY sequence').all();
+const history = () => db.prepare('SELECT status, interview_round, rejected, baseline, recorded_at FROM internship_status_history ORDER BY initial DESC, sequence').all();
 async function insert(status = 'Applied') {
   await db.prepare("INSERT INTO internships (id, company, role, status) VALUES ('test', 'Example', 'Intern', ?)").bind(status).run();
 }
 beforeEach(async () => { await reset(); await db.prepare(schema).run(); });
 afterEach(() => vi.restoreAllMocks());
 
-it('seeds only the known current status and does not duplicate it on migration retry', async () => {
+it('prepends the default Applied start to legacy OA and does not duplicate it on migration retry', async () => {
   await insert('OA');
   await migrate();
   await migrate();
   const { results } = await history();
-  expect(results).toHaveLength(1);
-  expect(results[0]).toMatchObject({ status: 'OA', baseline: 1 });
+  expect(results).toHaveLength(2);
+  expect(results[0]).toMatchObject({ status: 'Applied', baseline: 1 });
+  expect(results[1]).toMatchObject({ status: 'OA', baseline: 1 });
   expect(results[0].recorded_at).toMatch(/^\d{4}-\d{2}-\d{2}T/);
 });
 
@@ -74,5 +75,29 @@ it('returns persisted history after create, edit and reload and ignores client h
   expect(saved.statusHistory.map((entry: any) => entry.status)).toEqual(['Applied', 'Interview Round']);
   expect(saved.statusHistory[1]).toMatchObject({ interviewRound: 'Final', rejected: false, baseline: false });
   expect((await (await request('GET', '')).json<any>())[0].statusHistory).toEqual(saved.statusHistory);
+  expect((await request('PUT', '/test', initial)).status).toBe(409);
   expect((await request('PUT', '/missing', initial)).status).toBe(404);
+});
+
+it('repairs an existing OA to Applied to OA sequence without losing its OA snapshots', async () => {
+  await applyD1Migrations(db, bindings.TEST_MIGRATIONS.filter(migration => migration.name.startsWith('0003')));
+  await insert('OA');
+  await db.prepare("UPDATE internships SET status = 'Applied' WHERE id = 'test'").run();
+  await db.prepare("UPDATE internships SET status = 'OA' WHERE id = 'test'").run();
+  await migrate();
+  expect((await history()).results.map(row => row.status)).toEqual(['Applied', 'OA', 'OA']);
+});
+
+it('new advanced-stage records and activated bookmarks get an Applied starting snapshot', async () => {
+  await migrate();
+  await insert('Offer');
+  expect((await history()).results.map(row => row.status)).toEqual(['Applied', 'Offer']);
+  await expect(db.prepare("UPDATE internships SET status = 'Applied' WHERE id = 'test'").run()).rejects.toThrow('Applied is the starting stage');
+  await db.prepare("DELETE FROM internships WHERE id = 'test'").run();
+  await insert('Bookmarked');
+  expect((await history()).results.map(row => row.status)).toEqual(['Bookmarked']);
+  await db.prepare("UPDATE internships SET status = 'OA' WHERE id = 'test'").run();
+  expect((await history()).results.map(row => row.status)).toEqual(['Applied', 'Bookmarked', 'OA']);
+  await db.prepare("UPDATE internships SET status = 'Bookmarked' WHERE id = 'test'").run();
+  await expect(db.prepare("UPDATE internships SET status = 'Applied' WHERE id = 'test'").run()).rejects.toThrow('Applied is the starting stage');
 });

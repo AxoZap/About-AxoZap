@@ -38,22 +38,24 @@ test('all rejection routes merge at one endpoint without adding visits for rejec
   assert.equal(flow.nodes.filter(node => node.label === 'Online assessment').length, 1);
 });
 
-test('baseline snapshots start at the known stage without inventing an application or assessment visit', () => {
+test('legacy and imported snapshots always start at Applied without inventing skipped assessments', () => {
   const record = application(['Interview Round']);
   record.statusHistory[0].baseline = true;
   const flow = buildApplicationFlow([record, { status: 'OA' }]);
   assert.equal(flow.baseline, 2);
-  assert.ok(!flow.nodes.some(node => node.label === 'Applied'));
-  assert.deepEqual(edges(flow).filter(edge => edge[0] === 'Applications'), [['Applications', 'Interview', 1], ['Applications', 'Online assessment', 1]]);
+  assert.equal(flow.nodes.filter(node => node.label === 'Applied').length, 1);
+  assert.deepEqual(edges(flow).filter(edge => edge[0] === 'Applications'), [['Applications', 'Applied', 2]]);
+  assert.ok(edges(flow).some(edge => edge[0] === 'Applied' && edge[1] === 'Interview'));
+  assert.ok(edges(flow).some(edge => edge[0] === 'Applied' && edge[1] === 'Online assessment'));
 });
 
-test('retains revisited stages and interview rounds with acyclic, balanced flows', () => {
+test('ignores late Applied corrections and retains interview rounds with balanced flows', () => {
   const record = application(['Applied', 'OA', 'Applied', 'Interview Round', 'Interview Round']);
   record.statusHistory[3].interviewRound = '1';
   record.statusHistory[4].interviewRound = 'Final';
   record.interviewRound = 'Final';
   const flow = buildApplicationFlow([record]);
-  assert.equal(flow.nodes.filter(node => node.label === 'Applied').length, 2);
+  assert.equal(flow.nodes.filter(node => node.label === 'Applied').length, 1);
   assert.ok(edges(flow).some(edge => edge[0] === 'Interview · 1' && edge[1] === 'Interview · Final'));
   const layout = layoutApplicationFlow(flow);
   for (const link of layout.links) {
@@ -80,4 +82,13 @@ test('handles empty and entirely bookmarked trackers', () => {
   assert.deepEqual(buildApplicationFlow([]), { nodes: [], links: [], total: 0, baseline: 0, bookmarked: 0 });
   assert.equal(buildApplicationFlow([{ status: 'Bookmarked' }]).total, 0);
   assert.ok(Number.isFinite(layoutApplicationFlow(buildApplicationFlow([])).height));
+});
+
+test('repairs OA to Applied to OA into a single Applied to OA path', () => {
+  const flow = buildApplicationFlow([application(['OA', 'Applied', 'OA'])]);
+  assert.deepEqual(edges(flow), [
+    ['Applications', 'Applied', 1], ['Applied', 'Online assessment', 1], ['Online assessment', 'Assessment stage', 1],
+  ]);
+  const applied = flow.nodes.find(node => node.label === 'Applied');
+  assert.ok(!flow.links.some(link => link.target === applied.key && link.source !== 'applications'));
 });

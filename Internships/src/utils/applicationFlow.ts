@@ -65,10 +65,11 @@ export function buildApplicationFlow(internships: Internship[]) {
     if (!internship.statusHistory?.length || internship.statusHistory[0].baseline) baseline += 1;
 
     // Rejection toggles and unrelated edits do not create duplicate stage visits.
-    const path: { status: ApplicationStatus; round: string }[] = [];
+    // Applied is always the starting stage, including imported and legacy records.
+    const path: { status: ApplicationStatus; round: string }[] = [{ status: 'Applied', round: '' }];
     const entries = [...(internship.statusHistory ?? []), internship];
     for (const entry of entries) {
-      if (!stages.some(stage => stage.status === entry.status)) continue;
+      if (entry.status === 'Applied' || entry.status === 'Withdrawn' || !stages.some(stage => stage.status === entry.status)) continue;
       const round = entry.status === 'Interview Round' ? entry.interviewRound?.trim() || '' : '';
       const previous = path[path.length - 1];
       if (previous?.status !== entry.status || previous.round !== round) path.push({ status: entry.status, round });

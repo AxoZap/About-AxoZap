@@ -6,11 +6,12 @@ import { ChevronDown } from 'lucide-react';
 interface StatusDropdownProps {
   status: ApplicationStatus;
   interviewRound?: string;
+  appliedDisabled?: boolean;
   onChange: (status: ApplicationStatus) => void;
   onInterviewRoundChange: (round: string) => void;
 }
 
-export const StatusDropdown: React.FC<StatusDropdownProps> = ({ status, interviewRound, onChange, onInterviewRoundChange }) => {
+export const StatusDropdown: React.FC<StatusDropdownProps> = ({ status, interviewRound, appliedDisabled, onChange, onInterviewRoundChange }) => {
   const [round, setRound] = useState(interviewRound || '');
   useEffect(() => setRound(status === 'Interview Round' ? interviewRound || '' : ''), [status, interviewRound]);
   const cfg = statusConfig[status] || statusConfig.Applied;
@@ -36,7 +37,7 @@ export const StatusDropdown: React.FC<StatusDropdownProps> = ({ status, intervie
           title="Change Status"
         >
           {applicationStatuses.map((st) => (
-            <option key={st} value={st} className="bg-slate-900 text-slate-100 py-1">
+            <option key={st} value={st} disabled={st === 'Applied' && appliedDisabled} className="bg-slate-900 text-slate-100 py-1">
               {st}
             </option>
           ))}

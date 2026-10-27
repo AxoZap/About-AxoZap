@@ -41,7 +41,7 @@ const selectInternships = `SELECT i.*, (
   SELECT json_group_array(json_object(
     'status', h.status, 'interview_round', h.interview_round,
     'rejected', h.rejected, 'recorded_at', h.recorded_at, 'baseline', h.baseline
-  )) FROM (SELECT * FROM internship_status_history WHERE internship_id = i.id ORDER BY sequence) h
+  )) FROM (SELECT * FROM internship_status_history WHERE internship_id = i.id ORDER BY initial DESC, sequence) h
 ) AS history_json FROM internships i`;
 
 async function storedInternship(db: D1Database, id: string) {
@@ -176,6 +176,13 @@ app.put("/api/internships/:id", async (c) => {
   const id = c.req.param("id");
   const body = await c.req.json();
   const { internship } = body;
+
+  if ((internship.status || 'Applied') === 'Applied') {
+    const advanced = await c.env.axozap_internships_db.prepare(
+      "SELECT 1 FROM internship_status_history WHERE internship_id = ? AND status NOT IN ('Applied', 'Bookmarked') LIMIT 1"
+    ).bind(id).first();
+    if (advanced) return c.json({ error: 'Applied is the starting stage and cannot follow another stage.' }, 409);
+  }
 
   const now = new Date().toISOString().split("T")[0];
 

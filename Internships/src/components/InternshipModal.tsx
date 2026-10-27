@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Building2, MapPin, DollarSign, Globe, FileText, Calendar, Code2 } from 'lucide-react';
 import { Internship, ApplicationStatus, applicationStatuses, WorkModel, TermSeason } from '../types/internship';
 import { localDateString } from '../utils/date';
+import { hasProgressedPastApplied } from '../utils/internship';
 
 interface InternshipModalProps {
   isOpen: boolean;
@@ -227,7 +228,7 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
                 className="w-full px-3.5 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-cyan-500 cursor-pointer"
               >
                 {applicationStatuses.map((s) => (
-                  <option key={s} value={s} className="bg-slate-900">
+                  <option key={s} value={s} disabled={s === 'Applied' && Boolean(editingInternship && hasProgressedPastApplied(editingInternship))} className="bg-slate-900">
                     {s}
                   </option>
                 ))}

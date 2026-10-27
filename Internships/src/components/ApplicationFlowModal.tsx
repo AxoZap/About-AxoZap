@@ -68,7 +68,7 @@ export function ApplicationFlowModal({ internships, onClose }: ApplicationFlowMo
         <div className="flex items-start justify-between gap-3 p-5">
           <div>
             <h2 id="application-flow-title" className="text-lg font-semibold text-white">Application flow</h2>
-            <p id="application-flow-description" className="mt-1 text-xs leading-relaxed text-slate-400">Recorded stage changes, including skipped stages and rejections.</p>
+            <p id="application-flow-description" className="mt-1 text-xs leading-relaxed text-slate-400">Every application starts at Applied. Later stages follow your recorded changes.</p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {flow.total > 0 && <button onClick={downloadSvg} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 px-2.5 py-1.5 text-xs text-slate-200 hover:bg-slate-800"><Download className="h-3.5 w-3.5" /><span className="hidden sm:inline">Download SVG</span><span className="sr-only sm:hidden">Download SVG</span></button>}
@@ -78,7 +78,7 @@ export function ApplicationFlowModal({ internships, onClose }: ApplicationFlowMo
         {flow.total > 0 ? <div className="mx-3 overflow-x-auto rounded-xl bg-white sm:mx-5">
           <svg ref={svgRef} xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 ${layout.width} ${layout.height}`} width={layout.width} height={layout.height} role="img" aria-labelledby="flow-svg-title flow-svg-description" style={{ width: '100%', minWidth: Math.max(800, layout.width * 0.75), height: 'auto', fontFamily: 'Arial, sans-serif' }}>
             <title id="flow-svg-title">Internship application flow: {flow.total} applications</title>
-            <desc id="flow-svg-description">Recorded application paths. {layout.links.map(link => `${link.sourceNode.label} to ${link.targetNode.label}: ${link.count}`).join('. ')}. {flow.baseline} applications have unknown earlier history. {flow.bookmarked} bookmarks excluded.</desc>
+            <desc id="flow-svg-description">Applied is the default starting stage. Recorded application paths. {layout.links.map(link => `${link.sourceNode.label} to ${link.targetNode.label}: ${link.count}`).join('. ')}. {flow.baseline} applications have unknown earlier history. {flow.bookmarked} bookmarks excluded.</desc>
             <rect width={layout.width} height={layout.height} fill="white" />
             <g fill="#64748b" fontSize="11" letterSpacing="1.5">
               <text x="24" y="32">APPLICATIONS</text>
@@ -101,7 +101,7 @@ export function ApplicationFlowModal({ internships, onClose }: ApplicationFlowMo
             </g>
           </svg>
         </div> : <div className="mx-5 rounded-xl border border-dashed border-slate-700 p-12 text-center text-sm text-slate-400">Add an application to generate a diagram.</div>}
-        <p className="px-5 py-4 text-xs leading-relaxed text-slate-400">{flow.bookmarked > 0 ? `${flow.bookmarked} bookmarked ${flow.bookmarked === 1 ? 'position' : 'positions'} excluded. ` : ''}Band widths show counts. Skipped stages connect directly; all rejections join one endpoint. Hover a band for details.{flow.baseline > 0 && ` Earlier stages for ${flow.baseline} existing ${flow.baseline === 1 ? 'application were' : 'applications were'} not saved; ${flow.baseline === 1 ? 'its path starts' : 'their paths start'} at the first recorded status.`}</p>
+        <p className="px-5 py-4 text-xs leading-relaxed text-slate-400">{flow.bookmarked > 0 ? `${flow.bookmarked} bookmarked ${flow.bookmarked === 1 ? 'position' : 'positions'} excluded. ` : ''}Band widths show counts. Skipped stages connect directly; all rejections join one endpoint. Hover a band for details.{flow.baseline > 0 && ` Earlier stages for ${flow.baseline} existing ${flow.baseline === 1 ? 'application were' : 'applications were'} not saved; Applied is included as the default start.`}</p>
       </div>
     </div>
   );
