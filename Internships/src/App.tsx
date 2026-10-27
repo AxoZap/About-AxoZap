@@ -1,10 +1,11 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Plus } from 'lucide-react';
 import { Internship, ApplicationStatus } from './types/internship';
 import { StatsHeader } from './components/StatsHeader';
 import { FilterBar } from './components/FilterBar';
 import { InternshipTable } from './components/InternshipTable';
 import { InternshipModal } from './components/InternshipModal';
+import { ApplicationFlowModal } from './components/ApplicationFlowModal';
 import { isRejected } from './utils/internship';
 import { localDateString } from './utils/date';
 
@@ -31,6 +32,8 @@ export default function App() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFlowOpen, setIsFlowOpen] = useState(false);
+  const closeFlow = useCallback(() => setIsFlowOpen(false), []);
   const [editingInternship, setEditingInternship] = useState<Internship | null>(null);
 
   // Load from backend on mount
@@ -234,7 +237,7 @@ export default function App() {
         {loading && <p className="mb-4 text-sm text-slate-400">Loading applications…</p>}
 
         {/* Natural Stats Bar */}
-        <StatsHeader internships={internships} />
+        <StatsHeader internships={internships} onShowFlow={() => setIsFlowOpen(true)} flowDisabled={loading || Boolean(error)} />
 
         {/* Filters */}
         <FilterBar
@@ -268,6 +271,7 @@ export default function App() {
       </div>
 
       {/* Add / Edit Modal */}
+      {isFlowOpen && <ApplicationFlowModal internships={internships} onClose={closeFlow} />}
       <InternshipModal
         isOpen={isModalOpen}
         onClose={() => {

@@ -1,12 +1,15 @@
 import React from 'react';
+import { GitFork } from 'lucide-react';
 import { Internship } from '../types/internship';
 import { isRejected } from '../utils/internship';
 
 interface StatsHeaderProps {
   internships: Internship[];
+  onShowFlow: () => void;
+  flowDisabled?: boolean;
 }
 
-export const StatsHeader: React.FC<StatsHeaderProps> = ({ internships }) => {
+export const StatsHeader: React.FC<StatsHeaderProps> = ({ internships, onShowFlow, flowDisabled }) => {
   const total = internships.length;
   const active = internships.filter(i => !isRejected(i));
   const pending = active.filter(i => ['Applied', 'OA'].includes(i.status)).length;
@@ -40,6 +43,10 @@ export const StatsHeader: React.FC<StatsHeaderProps> = ({ internships }) => {
         <span className="text-xs text-slate-400 font-medium uppercase tracking-wider">Offers:</span>
         <span className="text-lg font-bold text-emerald-400">{offers}</span>
       </div>
+      <button onClick={onShowFlow} disabled={flowDisabled} className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-slate-700 px-2.5 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed">
+        <GitFork className="h-3.5 w-3.5" />
+        Flow diagram
+      </button>
     </div>
   );
 };
