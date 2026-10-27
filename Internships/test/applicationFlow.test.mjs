@@ -44,7 +44,8 @@ test('legacy and imported snapshots always start at Applied without inventing sk
   const flow = buildApplicationFlow([record, { status: 'OA' }]);
   assert.equal(flow.baseline, 2);
   assert.equal(flow.nodes.filter(node => node.label === 'Applied').length, 1);
-  assert.deepEqual(edges(flow).filter(edge => edge[0] === 'Applications'), [['Applications', 'Applied', 2]]);
+  assert.equal(flow.nodes.find(node => node.label === 'Applied').count, 2);
+  assert.ok(!flow.nodes.some(node => node.label === 'Applications'));
   assert.ok(edges(flow).some(edge => edge[0] === 'Applied' && edge[1] === 'Interview'));
   assert.ok(edges(flow).some(edge => edge[0] === 'Applied' && edge[1] === 'Online assessment'));
 });
@@ -87,8 +88,24 @@ test('handles empty and entirely bookmarked trackers', () => {
 test('repairs OA to Applied to OA into a single Applied to OA path', () => {
   const flow = buildApplicationFlow([application(['OA', 'Applied', 'OA'])]);
   assert.deepEqual(edges(flow), [
-    ['Applications', 'Applied', 1], ['Applied', 'Online assessment', 1], ['Online assessment', 'Assessment stage', 1],
+    ['Applied', 'Online assessment', 1], ['Online assessment', 'Assessment stage', 1],
   ]);
   const applied = flow.nodes.find(node => node.label === 'Applied');
-  assert.ok(!flow.links.some(link => link.target === applied.key && link.source !== 'applications'));
+  assert.ok(!flow.links.some(link => link.target === applied.key));
+});
+
+test('routes the pending band around OA instead of through its node', () => {
+  const flow = buildApplicationFlow([
+    ...Array.from({length:22}, () => application(['Applied'])),
+    application(['Applied'], true), application(['Applied', 'OA']),
+  ]);
+  const layout = layoutApplicationFlow(flow);
+  const applied = layout.nodes.find(node => node.label === 'Applied');
+  const assessment = layout.nodes.find(node => node.label === 'Online assessment');
+  assert.equal(applied.layer, 0);
+  assert.equal(applied.count, 24);
+  const pendingAtAssessment = layout.links.find(link => link.label === 'Applied → Awaiting response: 22' && link.targetNode.layer === assessment.layer);
+  assert.ok(pendingAtAssessment);
+  assert.ok(assessment.y >= pendingAtAssessment.targetY + pendingAtAssessment.height + 18);
+  assert.equal(layout.nodes.filter(node => node.kind === 'root').length, 1);
 });

@@ -78,22 +78,22 @@ export function ApplicationFlowModal({ internships, onClose }: ApplicationFlowMo
         {flow.total > 0 ? <div className="mx-3 overflow-x-auto rounded-xl bg-white sm:mx-5">
           <svg ref={svgRef} xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 ${layout.width} ${layout.height}`} width={layout.width} height={layout.height} role="img" aria-labelledby="flow-svg-title flow-svg-description" style={{ width: '100%', minWidth: Math.max(800, layout.width * 0.75), height: 'auto', fontFamily: 'Arial, sans-serif' }}>
             <title id="flow-svg-title">Internship application flow: {flow.total} applications</title>
-            <desc id="flow-svg-description">Applied is the default starting stage. Recorded application paths. {layout.links.map(link => `${link.sourceNode.label} to ${link.targetNode.label}: ${link.count}`).join('. ')}. {flow.baseline} applications have unknown earlier history. {flow.bookmarked} bookmarks excluded.</desc>
+            <desc id="flow-svg-description">Applied is the default starting stage. Recorded application paths. {[...new Set(layout.links.map(link => link.label))].join('. ')}. {flow.baseline} applications have unknown earlier history. {flow.bookmarked} bookmarks excluded.</desc>
             <rect width={layout.width} height={layout.height} fill="white" />
             <g fill="#64748b" fontSize="11" letterSpacing="1.5">
-              <text x="24" y="32">APPLICATIONS</text>
+              <text x="24" y="32">START</text>
               <text x="400" y="32">RECORDED PROGRESS</text>
               <text x={layout.width - 270} y="32">OUTCOME</text>
             </g>
             {layout.links.map(link => <path
               key={JSON.stringify([link.source, link.target])}
-              d={ribbon(link.sourceNode.x + 14, link.sourceY, link.targetNode.x, link.targetY, link.height)}
-              fill={link.sourceNode.kind === 'root' ? link.targetNode.color : link.sourceNode.color} fillOpacity="0.35"
-            ><title>{link.sourceNode.label} → {link.targetNode.label}: {link.count}</title></path>)}
+              d={ribbon(link.sourceNode.x + (link.sourceNode.virtual ? 0 : 14), link.sourceY, link.targetNode.x, link.targetY, link.height)}
+              fill={link.color} fillOpacity="0.35"
+            ><title>{link.label}</title></path>)}
             {layout.nodes.map(node => <rect key={node.key} x={node.x} y={node.y} width="14" height={node.height} fill={node.color} />)}
             <g fill="#1e293b" fontSize="14" stroke="white" strokeWidth="4" paintOrder="stroke" strokeLinejoin="round">
               {layout.nodes.map(node => node.kind === 'root' ? <g key={node.key}>
-                <text x="24" y={node.y + node.height / 2 - 3}>Applications</text>
+                <text x="24" y={node.y + node.height / 2 - 3}>Applied</text>
                 <text x="24" y={node.y + node.height / 2 + 18} fontWeight="bold">{flow.total}</text>
               </g> : <text key={node.key} x={node.x + 26} y={node.y + node.height / 2 + 5}>
                 <title>{node.label} ({node.count})</title>{node.label.length > 25 ? `${node.label.slice(0, 24)}…` : node.label} ({node.count})
