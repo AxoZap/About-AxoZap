@@ -180,7 +180,9 @@ export default function App() {
           if (!match) return false;
         }
 
-        if (statusFilter === 'Rejected') {
+        if (item.status === 'Withdrawn') {
+          if (statusFilter !== 'Withdrawn') return false;
+        } else if (statusFilter === 'Rejected') {
           if (!isRejected(item)) return false;
         } else if (isRejected(item) || (statusFilter !== 'All' && item.status !== statusFilter)) {
           return false;
