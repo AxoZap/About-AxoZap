@@ -75,6 +75,20 @@ it('returns persisted history after create, edit and reload and ignores client h
   expect(saved.statusHistory.map((entry: any) => entry.status)).toEqual(['Applied', 'Interview Round']);
   expect(saved.statusHistory[1]).toMatchObject({ interviewRound: 'Final', rejected: false, baseline: false });
   expect((await (await request('GET', '')).json<any>())[0].statusHistory).toEqual(saved.statusHistory);
+  for (const [status, interviewRound] of [['OA', '1'], ['OA', '2'], ['Interview Round', '3']]) {
+    const response = await request('PUT', '/test', { ...initial, status, interviewRound });
+    expect(response.status).toBe(200);
+    const persisted = await response.json<any>();
+    expect(persisted.interviewRound).toBe(interviewRound);
+    expect(persisted.statusHistory.at(-1)).toMatchObject({ status, interviewRound });
+  }
+  const persisted = (await (await request('GET', '')).json<any>())[0];
+  const before = persisted.statusHistory.length;
+  const unchanged = await request('PUT', '/test', { ...persisted, notes: 'An unrelated edit' });
+  expect((await unchanged.json<any>()).statusHistory).toHaveLength(before);
+  expect(persisted.statusHistory.map((entry: any) => [entry.status, entry.interviewRound])).toEqual([
+    ['Applied', undefined], ['Interview Round', 'Final'], ['OA', '1'], ['OA', '2'], ['Interview Round', '3'],
+  ]);
   expect((await request('PUT', '/test', initial)).status).toBe(409);
   expect((await request('PUT', '/missing', initial)).status).toBe(404);
 });

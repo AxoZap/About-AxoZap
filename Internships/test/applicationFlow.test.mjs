@@ -109,3 +109,16 @@ test('routes the pending band around OA instead of through its node', () => {
   assert.ok(assessment.y >= pendingAtAssessment.targetY + pendingAtAssessment.height + 18);
   assert.equal(layout.nodes.filter(node => node.kind === 'root').length, 1);
 });
+
+
+test('retains repeated OA rounds without duplicating visits for rejection toggles', () => {
+  const record = application(['Applied', 'OA', 'OA', 'OA']);
+  record.statusHistory[1].interviewRound = '1';
+  record.statusHistory[2].interviewRound = '2';
+  record.statusHistory[3].interviewRound = '2';
+  record.statusHistory[3].rejected = true;
+  record.interviewRound = '2';
+  const flow = buildApplicationFlow([record]);
+  assert.ok(edges(flow).some(edge => edge[0] === 'Online assessment · 1' && edge[1] === 'Online assessment · 2'));
+  assert.equal(flow.nodes.filter(node => node.kind === 'stage').length, 2);
+});

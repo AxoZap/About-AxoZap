@@ -11,7 +11,7 @@ export type ApplicationStatus = typeof applicationStatuses[number];
 
 export interface StatusHistoryEntry {
   status: ApplicationStatus;
-  interviewRound?: string;
+  interviewRound?: string; // Current OA or Interview round; retained API field name for compatibility.
   rejected: boolean;
   recordedAt: string;
   baseline: boolean;
@@ -32,7 +32,7 @@ export interface Internship {
   season: TermSeason;
   dateApplied: string; // YYYY-MM-DD
   status: ApplicationStatus;
-  interviewRound?: string;
+  interviewRound?: string; // Current OA or Interview round; retained API field name for compatibility.
   rejected?: boolean;
   statusHistory?: StatusHistoryEntry[];
   jobUrl?: string;

@@ -6,7 +6,7 @@ import { FilterBar } from './components/FilterBar';
 import { InternshipTable } from './components/InternshipTable';
 import { InternshipModal } from './components/InternshipModal';
 import { ApplicationFlowModal } from './components/ApplicationFlowModal';
-import { isRejected } from './utils/internship';
+import { isRejected, hasRounds, savedStageRound } from './utils/internship';
 import { localDateString } from './utils/date';
 
 const API_URL = '/api/internships';
@@ -108,27 +108,21 @@ export default function App() {
   const handleStatusChange = async (id: string, newStatus: ApplicationStatus) => {
     const now = localDateString();
     const target = internships.find((i) => i.id === id);
-    if (!target) return;
+    if (!target || target.status === newStatus) return;
 
     const updated = {
       ...target,
       status: newStatus,
-      interviewRound: newStatus === 'Interview Round' ? target.interviewRound : undefined,
+      interviewRound: savedStageRound(target, newStatus) || undefined,
       updatedAt: now,
     };
     await saveQuickChange(updated);
   };
 
-  const handleInterviewRoundChange = async (id: string, round: string) => {
-    const target = internships.find((item) => item.id === id);
-    if (!target || target.status !== 'Interview Round') return;
-
-    const updated = {
-      ...target,
-      interviewRound: round.trim() || undefined,
-      updatedAt: localDateString(),
-    };
-    await saveQuickChange(updated);
+  const handleRoundChange = async (id: string, round: string) => {
+    const target = internships.find(item => item.id === id);
+    if (!target || !hasRounds(target.status)) return;
+    await saveQuickChange({ ...target, interviewRound: round.trim() || undefined, updatedAt: localDateString() });
   };
 
   const handleRejectedChange = async (id: string) => {
@@ -263,7 +257,7 @@ export default function App() {
         <InternshipTable
           internships={filteredInternships}
           onStatusChange={handleStatusChange}
-          onInterviewRoundChange={handleInterviewRoundChange}
+          onRoundChange={handleRoundChange}
           onRejectedChange={handleRejectedChange}
           onEdit={(internship) => {
             setEditingInternship(internship);

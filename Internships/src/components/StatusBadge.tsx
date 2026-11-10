@@ -1,4 +1,5 @@
 import React from 'react';
+import { statusLabel } from '../utils/internship';
 import { ApplicationStatus } from '../types/internship';
 import { 
   Bookmark, 
@@ -81,7 +82,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'md' })
       }`}
     >
       <Icon className="w-3.5 h-3.5 shrink-0" />
-      <span>{status}</span>
+      <span>{statusLabel(status)}</span>
     </span>
   );
 };

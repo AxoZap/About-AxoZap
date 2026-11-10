@@ -70,7 +70,7 @@ export function buildApplicationFlow(internships: Internship[]) {
     const entries = [...(internship.statusHistory ?? []), internship];
     for (const entry of entries) {
       if (entry.status === 'Applied' || entry.status === 'Withdrawn' || !stages.some(stage => stage.status === entry.status)) continue;
-      const round = entry.status === 'Interview Round' ? entry.interviewRound?.trim() || '' : '';
+      const round = entry.status === 'Interview Round' || entry.status === 'OA' ? entry.interviewRound?.trim() || '' : '';
       const previous = path[path.length - 1];
       if (previous?.status !== entry.status || previous.round !== round) path.push({ status: entry.status, round });
     }

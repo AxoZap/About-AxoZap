@@ -1,4 +1,5 @@
 import React from 'react';
+import { statusLabel } from '../utils/internship';
 import { Search, ArrowUpDown, X } from 'lucide-react';
 import { applicationStatuses, termSeasons, TermSeason, WorkModel } from '../types/internship';
 
@@ -82,7 +83,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         >
           {statusOptions.map((s) => (
             <option key={s} value={s} className="bg-slate-900">
-              {s === 'All' ? 'All Statuses' : s}
+              {s === 'All' ? 'All Statuses' : statusLabel(s)}
             </option>
           ))}
         </select>

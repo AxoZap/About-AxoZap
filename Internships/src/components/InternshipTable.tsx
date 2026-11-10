@@ -15,8 +15,8 @@ import { isRejected, hasProgressedPastApplied } from '../utils/internship';
 
 interface InternshipTableProps {
   internships: Internship[];
-  onStatusChange: (id: string, newStatus: ApplicationStatus) => void;
-  onInterviewRoundChange: (id: string, round: string) => void;
+  onStatusChange: (id: string, newStatus: ApplicationStatus) => Promise<void>;
+  onRoundChange: (id: string, round: string) => Promise<void>;
   onRejectedChange: (id: string) => void;
   onEdit: (internship: Internship) => void;
   onDelete: (id: string) => void;
@@ -25,7 +25,7 @@ interface InternshipTableProps {
 export const InternshipTable: React.FC<InternshipTableProps> = ({
   internships,
   onStatusChange,
-  onInterviewRoundChange,
+  onRoundChange,
   onRejectedChange,
   onEdit,
   onDelete,
@@ -107,8 +107,8 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
                       status={item.status}
                       appliedDisabled={hasProgressedPastApplied(item)}
                       interviewRound={item.interviewRound}
+                      onRoundChange={(round) => onRoundChange(item.id, round)}
                       onChange={(newStatus) => onStatusChange(item.id, newStatus)}
-                      onInterviewRoundChange={(round) => onInterviewRoundChange(item.id, round)}
                     />
                     {isRejected(item) && <StatusBadge status="Rejected" size="sm" />}
                   </div>

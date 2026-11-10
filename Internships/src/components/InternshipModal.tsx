@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { X, Building2, MapPin, DollarSign, Globe, FileText, Calendar, Code2 } from 'lucide-react';
-import { Internship, ApplicationStatus, applicationStatuses, termSeasons, WorkModel, TermSeason } from '../types/internship';
+import { Internship, ApplicationStatus, termSeasons, WorkModel, TermSeason } from '../types/internship';
+import { StatusDropdown } from './StatusDropdown';
 import { localDateString } from '../utils/date';
-import { hasProgressedPastApplied } from '../utils/internship';
+import { hasProgressedPastApplied, hasRounds, savedStageRound, statusLabel } from '../utils/internship';
 
 interface InternshipModalProps {
   isOpen: boolean;
@@ -115,7 +116,7 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
           workModel,
           season,
           status,
-          interviewRound: status === 'Interview Round' ? interviewRound.trim() || undefined : undefined,
+          interviewRound: hasRounds(status) ? interviewRound.trim() || undefined : undefined,
           rejected,
           dateApplied: dateApplied || localDateString(),
           salary: salary.trim() || undefined,
@@ -168,7 +169,7 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
               <ol className="mt-3 space-y-2 border-l border-slate-700 pl-3">
                 {editingInternship.statusHistory.map((entry, index) => (
                   <li key={index}>
-                    <div>{entry.status}{entry.interviewRound ? ` · ${entry.interviewRound}` : ''}{entry.rejected ? ' · Rejected' : ''}</div>
+                    <div>{statusLabel(entry.status)}{entry.interviewRound ? ` · ${entry.interviewRound}` : ''}{entry.rejected ? ' · Rejected' : ''}</div>
                     <div className="mt-0.5 text-[10px] text-slate-500">{new Date(entry.recordedAt).toLocaleString()}{entry.baseline ? ' · First recorded; earlier stages unknown' : ''}</div>
                   </li>
                 ))}
@@ -221,17 +222,16 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">Application Status</label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value as ApplicationStatus)}
-                className="w-full px-3.5 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-cyan-500 cursor-pointer"
-              >
-                {applicationStatuses.map((s) => (
-                  <option key={s} value={s} disabled={s === 'Applied' && Boolean(editingInternship && hasProgressedPastApplied(editingInternship))} className="bg-slate-900">
-                    {s}
-                  </option>
-                ))}
-              </select>
+              <StatusDropdown
+                status={status}
+                interviewRound={interviewRound}
+                onRoundChange={setInterviewRound}
+                appliedDisabled={Boolean(editingInternship && hasProgressedPastApplied(editingInternship))}
+                onChange={(nextStatus) => {
+                  setInterviewRound(savedStageRound({ ...editingInternship, status, interviewRound }, nextStatus));
+                  setStatus(nextStatus);
+                }}
+              />
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
@@ -246,20 +246,6 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
               />
             </div>
           </div>
-
-          {status === 'Interview Round' && (
-            <div>
-              <label htmlFor="interview-round" className="block text-xs font-semibold text-slate-300 mb-1.5">Interview Round</label>
-              <input
-                id="interview-round"
-                type="text"
-                value={interviewRound}
-                onChange={(e) => setInterviewRound(e.target.value)}
-                placeholder="e.g. Phone screen, Technical, Final"
-                className="w-full px-3.5 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500"
-              />
-            </div>
-          )}
 
           <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
             <input type="checkbox" checked={rejected} onChange={(e) => setRejected(e.target.checked)} className="accent-rose-500" />
