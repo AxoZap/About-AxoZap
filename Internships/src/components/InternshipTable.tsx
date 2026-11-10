@@ -83,10 +83,12 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
                         {item.company}
                       </div>
                       <div className="text-xs text-slate-400">{item.role}</div>
-                      <div className="flex items-center gap-1 text-[11px] text-slate-500 mt-0.5">
-                        <MapPin className="w-3 h-3 shrink-0 text-slate-500" />
-                        <span>{item.location}</span>
-                      </div>
+                      {item.workModel !== 'Remote' && item.location && (
+                        <div className="flex items-center gap-1 text-[11px] text-slate-500 mt-0.5">
+                          <MapPin className="w-3 h-3 shrink-0 text-slate-500" />
+                          <span>{item.location}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </td>
