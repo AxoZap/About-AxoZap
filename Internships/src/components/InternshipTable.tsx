@@ -46,21 +46,23 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
         <table className="w-full min-w-[1280px] table-fixed text-left border-collapse">
           <colgroup>
             <col className="w-60" />
-            <col className="w-48" />
+            <col className="w-36" />
             <col className="w-32" />
             <col className="w-36" />
             <col className="w-44" />
             <col />
-            <col className="w-44" />
+            <col className="w-28" />
+            <col className="w-32" />
           </colgroup>
           <thead>
             <tr className="border-b border-slate-800 bg-slate-900/80 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
               <th className="py-3 px-4">Company & Role</th>
-              <th className="py-3 px-4">Status</th>
+              <th className="py-3 px-3">Status</th>
               <th className="py-3 px-4">Term & Model</th>
               <th className="py-3 px-4">Date Applied</th>
               <th className="py-3 px-4">Pay</th>
               <th className="py-3 px-4">Notes & Links</th>
+              <th className="py-3 px-3 text-center">Portal</th>
               <th className="py-3 px-4 text-right">Actions</th>
             </tr>
           </thead>
@@ -79,17 +81,6 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
                     <div className="min-w-0 break-words">
                       <div className="font-semibold text-slate-100 flex items-center gap-1.5 leading-snug">
                         {item.company}
-                        {item.jobUrl && (
-                          <a
-                            href={item.jobUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="shrink-0 text-slate-400 hover:text-indigo-400 transition-colors"
-                            title="Job Listing"
-                          >
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        )}
                       </div>
                       <div className="text-xs text-slate-400">{item.role}</div>
                       <div className="flex items-center gap-1 text-[11px] text-slate-500 mt-0.5">
@@ -101,7 +92,7 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
                 </td>
 
                 {/* Status Dropdown inside the badge */}
-                <td className="py-3.5 px-4">
+                <td className="py-3.5 px-3">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <StatusDropdown
                       status={item.status}
@@ -152,18 +143,16 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
                   ) : (
                     <span className="text-slate-500 font-mono text-xs">—</span>
                   )}
-                  {item.portalUrl && (
-                    <div className="mt-1">
-                      <a
-                        href={item.portalUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[11px] text-indigo-400 hover:text-indigo-300 underline inline-flex items-center gap-1"
-                      >
-                        Portal Link <ExternalLink className="w-2.5 h-2.5" />
-                      </a>
-                    </div>
-                  )}
+                </td>
+
+                <td className="py-3.5 px-3 text-center">
+                  {item.portalUrl ? (
+                    <a href={item.portalUrl} target="_blank" rel="noopener noreferrer"
+                      aria-label={`Open ${item.company} application portal`}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-indigo-500/40 bg-indigo-500/10 px-3 py-2 text-xs font-semibold text-indigo-300 hover:bg-indigo-500/20 hover:text-indigo-200 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-400">
+                      Portal <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                    </a>
+                  ) : <span className="text-xs text-slate-500">—</span>}
                 </td>
 
                 {/* Actions */}
@@ -171,12 +160,12 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
                   <div className="flex items-center justify-end gap-1 whitespace-nowrap">
                     <button
                       onClick={() => onRejectedChange(item.id)}
-                      className={`px-2 py-1 rounded-lg text-xs font-medium transition-colors ${isRejected(item) ? 'text-rose-300 bg-rose-950/50 hover:bg-rose-900/50' : 'text-slate-400 hover:text-rose-300 hover:bg-slate-800'}`}
+                      aria-pressed={isRejected(item)}
+                      className={`p-1.5 rounded-lg transition-colors ${isRejected(item) ? 'text-rose-300 bg-rose-950/50 hover:bg-rose-900/50' : 'text-slate-400 hover:text-rose-300 hover:bg-slate-800'}`}
                       title={isRejected(item) ? 'Undo rejection' : 'Mark as rejected'}
                       aria-label={isRejected(item) ? 'Undo rejection' : 'Mark as rejected'}
                     >
-                      <XCircle className="w-3.5 h-3.5 inline mr-1" />
-                      {isRejected(item) ? 'Undo' : 'Rejected'}
+                      <XCircle className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => onEdit(item)}

@@ -32,7 +32,6 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
   const [rejected, setRejected] = useState(false);
   const [dateApplied, setDateApplied] = useState('');
   const [salary, setSalary] = useState('');
-  const [jobUrl, setJobUrl] = useState('');
   const [portalUrl, setPortalUrl] = useState('');
   const [notes, setNotes] = useState('');
   const [showSql, setShowSql] = useState(false);
@@ -59,7 +58,6 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
       setRejected(Boolean(editingInternship.rejected));
       setDateApplied(editingInternship.dateApplied);
       setSalary(editingInternship.salary || '');
-      setJobUrl(editingInternship.jobUrl || '');
       setPortalUrl(editingInternship.portalUrl || '');
       setNotes(editingInternship.notes || '');
     } else {
@@ -73,7 +71,6 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
       setRejected(false);
       setDateApplied(localDateString());
       setSalary('');
-      setJobUrl('');
       setPortalUrl('');
       setNotes('');
     }
@@ -120,7 +117,7 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
           rejected,
           dateApplied: dateApplied || localDateString(),
           salary: salary.trim() || undefined,
-          jobUrl: jobUrl.trim() || undefined,
+          jobUrl: editingInternship?.jobUrl,
           portalUrl: portalUrl.trim() || undefined,
           notes: notes.trim() || undefined,
         },
@@ -296,7 +293,7 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1">
                 <DollarSign className="w-3 h-3 text-emerald-400" />
@@ -307,19 +304,6 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
                 value={salary}
                 onChange={(e) => setSalary(e.target.value)}
                 placeholder="e.g. $55/hr"
-                className="w-full px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-cyan-500 text-xs"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1">
-                <Globe className="w-3 h-3 text-cyan-400" />
-                Job Posting URL
-              </label>
-              <input
-                type="url"
-                value={jobUrl}
-                onChange={(e) => setJobUrl(e.target.value)}
-                placeholder="https://..."
                 className="w-full px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-slate-100 focus:outline-none focus:border-cyan-500 text-xs"
               />
             </div>
