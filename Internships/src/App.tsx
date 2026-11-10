@@ -215,7 +215,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans pb-16">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-10">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 pt-10">
         {/* Clean Header */}
         <header className="flex items-center justify-between gap-4 pb-6 mb-4 border-b border-slate-800">
           <div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Search, ArrowUpDown, X } from 'lucide-react';
-import { applicationStatuses, TermSeason, WorkModel } from '../types/internship';
+import { applicationStatuses, termSeasons, TermSeason, WorkModel } from '../types/internship';
 
 interface FilterBarProps {
   searchQuery: string;
@@ -25,15 +25,7 @@ const statusOptions = [
   ...applicationStatuses.slice(4),
 ] as const;
 
-const seasonOptions: ('All' | TermSeason)[] = [
-  'All',
-  'Summer 2027',
-  'Fall 2027',
-  'Spring 2028',
-  'Summer 2028',
-  'Full-Time',
-  'Off-Season',
-];
+const seasonOptions: ('All' | TermSeason)[] = ['All', ...termSeasons];
 
 const workModelOptions: ('All' | WorkModel)[] = ['All', 'Remote', 'Hybrid', 'On-site'];
 

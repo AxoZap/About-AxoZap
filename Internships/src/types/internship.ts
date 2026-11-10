@@ -19,7 +19,9 @@ export interface StatusHistoryEntry {
 
 export type WorkModel = 'Remote' | 'Hybrid' | 'On-site';
 
-export type TermSeason = 'Summer 2027' | 'Fall 2027' | 'Spring 2028' | 'Summer 2028' | 'Off-Season' | 'Full-Time';
+export const termSeasons = ['Winter 2026-2027', 'Summer 2027', 'Fall 2027', 'Spring 2028', 'Summer 2028', 'Full-Time', 'Off-Season'] as const;
+
+export type TermSeason = typeof termSeasons[number];
 
 export interface Internship {
   id: string;

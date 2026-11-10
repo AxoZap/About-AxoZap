@@ -41,9 +41,18 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
   }
 
   return (
-    <div className="bg-slate-900/60 border border-slate-800 rounded-xl shadow-sm">
-      <div>
-        <table className="w-full text-left border-collapse">
+    <div className="bg-slate-900/60 border border-slate-800 rounded-xl shadow-sm overflow-hidden">
+      <div className="overflow-x-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500" tabIndex={0} role="region" aria-label="Applications table">
+        <table className="w-full min-w-[1280px] table-fixed text-left border-collapse">
+          <colgroup>
+            <col className="w-60" />
+            <col className="w-48" />
+            <col className="w-32" />
+            <col className="w-36" />
+            <col className="w-44" />
+            <col />
+            <col className="w-44" />
+          </colgroup>
           <thead>
             <tr className="border-b border-slate-800 bg-slate-900/80 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
               <th className="py-3 px-4">Company & Role</th>
@@ -67,7 +76,7 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
                     <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-slate-200 shrink-0 text-xs">
                       {item.company.charAt(0).toUpperCase()}
                     </div>
-                    <div>
+                    <div className="min-w-0 break-words">
                       <div className="font-semibold text-slate-100 flex items-center gap-1.5 leading-snug">
                         {item.company}
                         {item.jobUrl && (
@@ -75,7 +84,7 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
                             href={item.jobUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-slate-400 hover:text-indigo-400 transition-colors"
+                            className="shrink-0 text-slate-400 hover:text-indigo-400 transition-colors"
                             title="Job Listing"
                           >
                             <ExternalLink className="w-3 h-3" />
@@ -84,7 +93,7 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
                       </div>
                       <div className="text-xs text-slate-400">{item.role}</div>
                       <div className="flex items-center gap-1 text-[11px] text-slate-500 mt-0.5">
-                        <MapPin className="w-3 h-3 text-slate-500" />
+                        <MapPin className="w-3 h-3 shrink-0 text-slate-500" />
                         <span>{item.location}</span>
                       </div>
                     </div>
@@ -124,9 +133,9 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
                 </td>
 
                 {/* Pay */}
-                <td className="py-3.5 px-4 text-xs whitespace-nowrap">
+                <td className="py-3.5 px-4 text-xs break-words">
                   {item.salary ? (
-                    <span className="font-medium text-emerald-300 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-800/40">
+                    <span className="inline-block max-w-full font-medium text-emerald-300 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-800/40">
                       {item.salary}
                     </span>
                   ) : (
@@ -135,7 +144,7 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
                 </td>
 
                 {/* Notes & Links */}
-                <td className="py-3.5 px-4 text-xs max-w-xs">
+                <td className="py-3.5 px-4 text-xs break-words">
                   {item.notes ? (
                     <p className="text-slate-300 line-clamp-2 text-xs">
                       {item.notes}
@@ -159,7 +168,7 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
 
                 {/* Actions */}
                 <td className="py-3.5 px-4 text-right">
-                  <div className="flex items-center justify-end gap-1">
+                  <div className="flex items-center justify-end gap-1 whitespace-nowrap">
                     <button
                       onClick={() => onRejectedChange(item.id)}
                       className={`px-2 py-1 rounded-lg text-xs font-medium transition-colors ${isRejected(item) ? 'text-rose-300 bg-rose-950/50 hover:bg-rose-900/50' : 'text-slate-400 hover:text-rose-300 hover:bg-slate-800'}`}
@@ -173,6 +182,7 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
                       onClick={() => onEdit(item)}
                       className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-400 hover:bg-slate-800 transition-colors"
                       title="Edit"
+                      aria-label={`Edit ${item.company}`}
                     >
                       <Edit3 className="w-3.5 h-3.5" />
                     </button>
@@ -184,6 +194,7 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
                       }}
                       className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
                       title="Delete"
+                      aria-label={`Delete ${item.company}`}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
