@@ -3,7 +3,7 @@ import type { ApplicationStatus, Internship } from '../types/internship';
 const stages: { status: ApplicationStatus; label: string; pending: string; color: string }[] = [
   { status: 'Applied', label: 'Applied', pending: 'Awaiting response', color: '#d99b35' },
   { status: 'OA', label: 'Online assessment', pending: 'Assessment stage', color: '#5695c8' },
-  { status: 'Interview Round', label: 'Interview', pending: 'Interviewing', color: '#8b78d2' },
+  { status: 'Interview Round', label: 'Interview', pending: 'Awaiting decision', color: '#8b78d2' },
   { status: 'Offer', label: 'Offer', pending: 'Offer received', color: '#41a584' },
   { status: 'Withdrawn', label: 'Withdrawn', pending: 'Withdrawn', color: '#8493a6' },
 ];
@@ -72,7 +72,14 @@ export function buildApplicationFlow(internships: Internship[]) {
       if (entry.status === 'Applied' || entry.status === 'Withdrawn' || !stages.some(stage => stage.status === entry.status)) continue;
       const round = entry.status === 'Interview Round' || entry.status === 'OA' ? entry.interviewRound?.trim() || '' : '';
       const previous = path[path.length - 1];
-      if (previous?.status !== entry.status || previous.round !== round) path.push({ status: entry.status, round });
+      if (previous?.status === entry.status) {
+        // Filling in or clearing a round edits the same stage visit.
+        // Only two explicit, different rounds represent actual progress.
+        if (!previous.round) previous.round = round;
+        else if (round && previous.round !== round) path.push({ status: entry.status, round });
+      } else {
+        path.push({ status: entry.status, round });
+      }
     }
     let previousKey = root.key;
     path.slice(1).forEach((entry, index) => {

@@ -19,3 +19,5 @@ Apply `cd worker && npx wrangler d1 migrations apply axozap-internships-db --rem
 The status picker displays **Interview** (stored as `Interview Round` for compatibility). OA and Interview round inputs stay hidden on load and appear only after explicitly choosing either stage in its status menu, including reselecting the current stage. Enter rounds manually; selecting a status never increments them. The existing `interview_round` field stores the current OA or Interview round, with earlier rounds preserved in status history.
 
 Migration `0005_cancelled.sql` adds cancellation to applications and history, and records cancellation/undo atomically through the existing D1 triggers. Apply pending migrations before deploying the Worker and frontend. Existing records default to not cancelled.
+
+In the flow diagram, filling in or clearing an OA/Interview round refines the existing stage visit rather than adding another node. Explicit changes between named rounds remain separate. Current interviews end at **Awaiting decision**.

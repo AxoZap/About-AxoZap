@@ -151,3 +151,38 @@ test('undoing cancellation restores the current stage outcome without adding sta
   assert.equal(flow.nodes.filter(node => node.label === 'Online assessment').length, 1);
   assert.ok(edges(flow).some(([source, target]) => source === 'Online assessment' && target === 'Assessment stage'));
 });
+
+
+test('adding an interview round refines the same visit and ends at Awaiting decision', () => {
+  const record = application(['Applied', 'Interview Round', 'Interview Round']);
+  record.statusHistory[2].interviewRound = '1';
+  record.interviewRound = '1';
+  const flow = buildApplicationFlow([record]);
+  assert.deepEqual(edges(flow), [
+    ['Applied', 'Interview · 1', 1], ['Interview · 1', 'Awaiting decision', 1],
+  ]);
+  assert.equal(flow.nodes.filter(node => node.kind === 'stage').length, 1);
+});
+
+test('blank round edits do not add visits, while explicit round changes remain visible', () => {
+  for (const status of ['OA', 'Interview Round']) {
+    const record = application(['Applied', status, status, status, status]);
+    record.statusHistory[1].interviewRound = '1';
+    record.statusHistory[3].interviewRound = '2';
+    const flow = buildApplicationFlow([record]);
+    const stages = flow.nodes.filter(node => node.kind === 'stage');
+    assert.deepEqual(stages.map(node => node.label), status === 'OA'
+      ? ['Online assessment · 1', 'Online assessment · 2']
+      : ['Interview · 1', 'Interview · 2']);
+    for (const node of stages) {
+      assert.equal(flow.links.filter(link => link.target === node.key).reduce((sum, link) => sum + link.count, 0), node.count);
+      assert.equal(flow.links.filter(link => link.source === node.key).reduce((sum, link) => sum + link.count, 0), node.count);
+    }
+  }
+});
+
+test('returning to an interview after a different stage keeps a separate visit', () => {
+  const flow = buildApplicationFlow([application(['Applied', 'Interview Round', 'OA', 'Interview Round'])]);
+  assert.equal(flow.nodes.filter(node => node.kind === 'stage' && node.label === 'Interview').length, 2);
+  for (const link of layoutApplicationFlow(flow).links) assert.ok(link.sourceNode.layer < link.targetNode.layer);
+});
