@@ -7,17 +7,19 @@ import {
   Edit3, 
   Calendar,
   XCircle,
+  Ban,
 } from 'lucide-react';
 import { Internship, ApplicationStatus } from '../types/internship';
 import { StatusDropdown } from './StatusDropdown';
 import { StatusBadge } from './StatusBadge';
-import { isRejected, hasProgressedPastApplied } from '../utils/internship';
+import { isRejected, isCancelled, hasProgressedPastApplied } from '../utils/internship';
 
 interface InternshipTableProps {
   internships: Internship[];
   onStatusChange: (id: string, newStatus: ApplicationStatus) => Promise<void>;
   onRoundChange: (id: string, round: string) => Promise<void>;
   onRejectedChange: (id: string) => void;
+  onCancelledChange: (id: string) => void;
   onEdit: (internship: Internship) => void;
   onDelete: (id: string) => void;
 }
@@ -27,6 +29,7 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
   onStatusChange,
   onRoundChange,
   onRejectedChange,
+  onCancelledChange,
   onEdit,
   onDelete,
 }) => {
@@ -52,7 +55,7 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
             <col className="w-44" />
             <col />
             <col className="w-28" />
-            <col className="w-32" />
+            <col className="w-40" />
           </colgroup>
           <thead>
             <tr className="border-b border-slate-800 bg-slate-900/80 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
@@ -104,6 +107,7 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
                       onChange={(newStatus) => onStatusChange(item.id, newStatus)}
                     />
                     {isRejected(item) && <StatusBadge status="Rejected" size="sm" />}
+                    {isCancelled(item) && <StatusBadge status="Cancelled" size="sm" />}
                   </div>
                 </td>
 
@@ -168,6 +172,15 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
                       aria-label={isRejected(item) ? 'Undo rejection' : 'Mark as rejected'}
                     >
                       <XCircle className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => onCancelledChange(item.id)}
+                      aria-pressed={isCancelled(item)}
+                      className={`p-1.5 rounded-lg transition-colors ${isCancelled(item) ? 'text-orange-300 bg-orange-950/50 hover:bg-orange-900/50' : 'text-slate-400 hover:text-orange-300 hover:bg-slate-800'}`}
+                      title={isCancelled(item) ? 'Undo cancellation' : 'Mark as cancelled'}
+                      aria-label={isCancelled(item) ? 'Undo cancellation' : 'Mark as cancelled'}
+                    >
+                      <Ban className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => onEdit(item)}

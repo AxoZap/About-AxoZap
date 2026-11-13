@@ -122,3 +122,32 @@ test('retains repeated OA rounds without duplicating visits for rejection toggle
   assert.ok(edges(flow).some(edge => edge[0] === 'Online assessment · 1' && edge[1] === 'Online assessment · 2'));
   assert.equal(flow.nodes.filter(node => node.kind === 'stage').length, 2);
 });
+
+
+test('cancellations merge separately from rejections and preserve stage and round paths', () => {
+  const cancelled = [application(['Applied']), application(['Applied', 'OA']), application(['Applied', 'Interview Round'])];
+  cancelled.forEach(record => { record.cancelled = true; });
+  cancelled[2].interviewRound = 'Final';
+  cancelled[2].statusHistory.at(-1).interviewRound = 'Final';
+  cancelled[2].statusHistory.push({ ...cancelled[2].statusHistory.at(-1), cancelled: true });
+  const flow = buildApplicationFlow([...cancelled, application(['Applied', 'OA'], true), { status: 'Bookmarked', cancelled: true }]);
+  assert.equal(flow.total, 4);
+  assert.equal(flow.nodes.find(node => node.label === 'Cancelled').count, 3);
+  assert.equal(flow.nodes.find(node => node.label === 'Rejected').count, 1);
+  assert.equal(flow.nodes.filter(node => node.label === 'Interview · Final').length, 1);
+  assert.ok(edges(flow).some(([source, target]) => source === 'Interview · Final' && target === 'Cancelled'));
+  const layout = layoutApplicationFlow(flow);
+  assert.equal(layout.nodes.find(node => node.label === 'Cancelled').count, 3);
+  for (const link of layout.links) assert.ok(link.sourceNode.layer < link.targetNode.layer);
+});
+
+test('undoing cancellation restores the current stage outcome without adding stage visits', () => {
+  const record = application(['Applied', 'OA']);
+  record.statusHistory.push({ ...record.statusHistory.at(-1), cancelled: true });
+  record.statusHistory.push({ ...record.statusHistory.at(-1), cancelled: false });
+  record.cancelled = false;
+  const flow = buildApplicationFlow([record]);
+  assert.ok(!flow.nodes.some(node => node.label === 'Cancelled'));
+  assert.equal(flow.nodes.filter(node => node.label === 'Online assessment').length, 1);
+  assert.ok(edges(flow).some(([source, target]) => source === 'Online assessment' && target === 'Assessment stage'));
+});

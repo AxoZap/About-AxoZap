@@ -8,7 +8,7 @@ import schema from '../schema.sql?raw';
 const bindings = env as { axozap_internships_db: D1Database; TEST_MIGRATIONS: D1Migration[]; CF_ACCESS_TEAM_DOMAIN: string; CF_ACCESS_AUD: string; SQL_OWNER_EMAIL: string; SQL_ALLOWED_ORIGIN: string };
 const db = bindings.axozap_internships_db;
 const migrate = () => applyD1Migrations(db, bindings.TEST_MIGRATIONS);
-const history = () => db.prepare('SELECT status, interview_round, rejected, baseline, recorded_at FROM internship_status_history ORDER BY initial DESC, sequence').all();
+const history = () => db.prepare('SELECT status, interview_round, rejected, cancelled, baseline, recorded_at FROM internship_status_history ORDER BY initial DESC, sequence').all();
 async function insert(status = 'Applied') {
   await db.prepare("INSERT INTO internships (id, company, role, status) VALUES ('test', 'Example', 'Intern', ?)").bind(status).run();
 }
@@ -89,6 +89,14 @@ it('returns persisted history after create, edit and reload and ignores client h
   expect(persisted.statusHistory.map((entry: any) => [entry.status, entry.interviewRound])).toEqual([
     ['Applied', undefined], ['Interview Round', 'Final'], ['OA', '1'], ['OA', '2'], ['Interview Round', '3'],
   ]);
+  for (const cancelled of [true, false]) {
+    const response = await request('PUT', '/test', { ...persisted, cancelled });
+    expect(response.status).toBe(200);
+    const saved = await response.json<any>();
+    expect(saved).toMatchObject({ cancelled, status: 'Interview Round', interviewRound: '3' });
+    expect(saved.statusHistory.at(-1)).toMatchObject({ cancelled, status: 'Interview Round', interviewRound: '3' });
+    expect((await (await request('GET', '')).json<any>())[0]).toMatchObject({ cancelled, statusHistory: saved.statusHistory });
+  }
   expect((await request('PUT', '/test', initial)).status).toBe(409);
   expect((await request('PUT', '/missing', initial)).status).toBe(404);
 });
@@ -114,4 +122,29 @@ it('new advanced-stage records and activated bookmarks get an Applied starting s
   expect((await history()).results.map(row => row.status)).toEqual(['Applied', 'Bookmarked', 'OA']);
   await db.prepare("UPDATE internships SET status = 'Bookmarked' WHERE id = 'test'").run();
   await expect(db.prepare("UPDATE internships SET status = 'Applied' WHERE id = 'test'").run()).rejects.toThrow('Applied is the starting stage');
+});
+
+
+it('migrates existing records and records cancellation and undo without losing the stage or round', async () => {
+  await insert('OA');
+  await migrate();
+  expect((await db.prepare("SELECT cancelled FROM internships WHERE id = 'test'").first())?.cancelled).toBe(0);
+  await db.prepare("UPDATE internships SET interview_round = '2', cancelled = 1 WHERE id = 'test'").run();
+  await db.prepare("UPDATE internships SET notes = 'Still cancelled' WHERE id = 'test'").run();
+  await db.prepare("UPDATE internships SET cancelled = 0 WHERE id = 'test'").run();
+  expect((await history()).results.map(row => [row.status, row.interview_round, row.cancelled])).toEqual([
+    ['Applied', null, 0], ['OA', null, 0], ['OA', '2', 1], ['OA', '2', 0],
+  ]);
+});
+
+it('records cancellation for new applications and activated bookmarks', async () => {
+  await migrate();
+  await db.prepare("INSERT INTO internships (id, company, role, status, cancelled) VALUES ('test', 'Example', 'Intern', 'Applied', 1)").run();
+  expect((await history()).results).toMatchObject([{ status: 'Applied', cancelled: 1 }]);
+  await db.prepare("DELETE FROM internships WHERE id = 'test'").run();
+  await db.prepare("INSERT INTO internships (id, company, role, status, cancelled) VALUES ('test', 'Example', 'Intern', 'Bookmarked', 1)").run();
+  await db.prepare("UPDATE internships SET status = 'OA' WHERE id = 'test'").run();
+  expect((await history()).results.map(row => [row.status, row.cancelled])).toEqual([
+    ['Applied', 0], ['Bookmarked', 1], ['OA', 1],
+  ]);
 });

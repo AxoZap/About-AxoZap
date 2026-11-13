@@ -23,6 +23,7 @@ const statusOptions = [
   'All',
   ...applicationStatuses.slice(0, 4),
   'Rejected',
+  'Cancelled',
   ...applicationStatuses.slice(4),
 ] as const;
 

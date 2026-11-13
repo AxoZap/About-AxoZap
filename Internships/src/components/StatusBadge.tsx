@@ -12,12 +12,12 @@ import {
 } from 'lucide-react';
 
 interface StatusBadgeProps {
-  status: ApplicationStatus | 'Rejected';
+  status: ApplicationStatus | 'Rejected' | 'Cancelled';
   size?: 'sm' | 'md';
 }
 
 export const statusConfig: Record<
-  ApplicationStatus | 'Rejected',
+  ApplicationStatus | 'Rejected' | 'Cancelled',
   { bg: string; text: string; border: string; dot: string; icon: React.ComponentType<{ className?: string }> }
 > = {
   'Bookmarked': {
@@ -61,6 +61,13 @@ export const statusConfig: Record<
     border: 'border-rose-900/50',
     dot: 'bg-rose-400',
     icon: XCircle,
+  },
+  'Cancelled': {
+    bg: 'bg-orange-950/40',
+    text: 'text-orange-300',
+    border: 'border-orange-900/50',
+    dot: 'bg-orange-400',
+    icon: Ban,
   },
   'Withdrawn': {
     bg: 'bg-neutral-900/50',

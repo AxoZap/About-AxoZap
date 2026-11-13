@@ -64,7 +64,7 @@ export function buildApplicationFlow(internships: Internship[]) {
     total += 1;
     if (!internship.statusHistory?.length || internship.statusHistory[0].baseline) baseline += 1;
 
-    // Rejection toggles and unrelated edits do not create duplicate stage visits.
+    // Rejection/cancellation toggles and unrelated edits do not create duplicate stage visits.
     // Applied is always the starting stage, including imported and legacy records.
     const path: { status: ApplicationStatus; round: string }[] = [{ status: 'Applied', round: '' }];
     const entries = [...(internship.statusHistory ?? []), internship];
@@ -90,11 +90,12 @@ export function buildApplicationFlow(internships: Internship[]) {
       connect(previousKey, key);
       previousKey = key;
     });
-    const key = internship.rejected ? 'outcome:rejected' : `outcome:${internship.status}`;
+    const outcome = internship.cancelled ? { key: 'outcome:cancelled', label: 'Cancelled', color: '#d99558', order: -2 }
+      : internship.rejected ? { key: 'outcome:rejected', label: 'Rejected', color: '#d46d7e', order: -1 }
+      : { key: `outcome:${internship.status}`, label: currentStage.pending, color: currentStage.color, order: stages.indexOf(currentStage) };
+    const { key } = outcome;
     visit({
-      key, label: internship.rejected ? 'Rejected' : currentStage.pending,
-      color: internship.rejected ? '#d46d7e' : currentStage.color,
-      layer: 0, order: internship.rejected ? -1 : stages.indexOf(currentStage), kind: 'outcome', count: 0,
+      ...outcome, layer: 0, kind: 'outcome', count: 0,
     });
     connect(previousKey, key);
   }

@@ -13,6 +13,7 @@ export interface StatusHistoryEntry {
   status: ApplicationStatus;
   interviewRound?: string; // Current OA or Interview round; retained API field name for compatibility.
   rejected: boolean;
+  cancelled?: boolean;
   recordedAt: string;
   baseline: boolean;
 }
@@ -34,6 +35,7 @@ export interface Internship {
   status: ApplicationStatus;
   interviewRound?: string; // Current OA or Interview round; retained API field name for compatibility.
   rejected?: boolean;
+  cancelled?: boolean;
   statusHistory?: StatusHistoryEntry[];
   jobUrl?: string;
   portalUrl?: string;
@@ -49,5 +51,6 @@ export interface InternshipStats {
   interviews: number;
   offers: number;
   rejected: number;
+  cancelled: number;
   active: number;
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import { GitFork } from 'lucide-react';
 import { Internship } from '../types/internship';
-import { isRejected } from '../utils/internship';
+import { isRejected, isCancelled } from '../utils/internship';
 
 interface StatsHeaderProps {
   internships: Internship[];
@@ -11,7 +11,8 @@ interface StatsHeaderProps {
 
 export const StatsHeader: React.FC<StatsHeaderProps> = ({ internships, onShowFlow, flowDisabled }) => {
   const total = internships.length;
-  const active = internships.filter(i => !isRejected(i));
+  const cancelled = internships.filter(isCancelled).length;
+  const active = internships.filter(i => !isRejected(i) && !isCancelled(i));
   const pending = active.filter(i => ['Applied', 'OA'].includes(i.status)).length;
   const interviews = active.filter(i => i.status === 'Interview Round').length;
   const offers = active.filter(i => i.status === 'Offer').length;
@@ -42,6 +43,11 @@ export const StatsHeader: React.FC<StatsHeaderProps> = ({ internships, onShowFlo
       <div className="flex items-baseline gap-2">
         <span className="text-xs text-slate-400 font-medium uppercase tracking-wider">Offers:</span>
         <span className="text-lg font-bold text-emerald-400">{offers}</span>
+      </div>
+      <div className="h-4 w-px bg-slate-800 hidden sm:block" />
+      <div className="flex items-baseline gap-2">
+        <span className="text-xs text-slate-400 font-medium uppercase tracking-wider">Cancelled:</span>
+        <span className="text-lg font-bold text-orange-300">{cancelled}</span>
       </div>
       <button onClick={onShowFlow} disabled={flowDisabled} className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-slate-700 px-2.5 py-1.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed">
         <GitFork className="h-3.5 w-3.5" />

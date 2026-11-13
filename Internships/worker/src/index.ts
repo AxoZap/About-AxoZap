@@ -21,6 +21,7 @@ interface InternshipRow {
   status: string;
   interview_round?: string;
   rejected: number;
+  cancelled: number;
   job_url?: string;
   portal_url?: string;
   salary?: string;
@@ -33,6 +34,7 @@ interface StatusHistoryRow {
   status: string;
   interview_round: string | null;
   rejected: number;
+  cancelled: number;
   recorded_at: string;
   baseline: number;
 }
@@ -40,7 +42,7 @@ interface StatusHistoryRow {
 const selectInternships = `SELECT i.*, (
   SELECT json_group_array(json_object(
     'status', h.status, 'interview_round', h.interview_round,
-    'rejected', h.rejected, 'recorded_at', h.recorded_at, 'baseline', h.baseline
+    'rejected', h.rejected, 'cancelled', h.cancelled, 'recorded_at', h.recorded_at, 'baseline', h.baseline
   )) FROM (SELECT * FROM internship_status_history WHERE internship_id = i.id ORDER BY initial DESC, sequence) h
 ) AS history_json FROM internships i`;
 
@@ -88,6 +90,7 @@ function mapRowToModel(row: InternshipRow) {
     status: row.status,
     interviewRound: row.interview_round || undefined,
     rejected: Boolean(row.rejected),
+    cancelled: Boolean(row.cancelled),
     jobUrl: row.job_url || undefined,
     portalUrl: row.portal_url || undefined,
     salary: row.salary || undefined,
@@ -97,6 +100,7 @@ function mapRowToModel(row: InternshipRow) {
       status: entry.status,
       interviewRound: entry.interview_round || undefined,
       rejected: Boolean(entry.rejected),
+      cancelled: Boolean(entry.cancelled),
       recordedAt: entry.recorded_at,
       baseline: Boolean(entry.baseline),
     })),
@@ -146,8 +150,8 @@ app.post("/api/internships", async (c) => {
 
   await c.env.axozap_internships_db
     .prepare(
-      `INSERT INTO internships (id, company, role, location, work_model, season, date_applied, status, interview_round, rejected, job_url, portal_url, salary, notes, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO internships (id, company, role, location, work_model, season, date_applied, status, interview_round, rejected, cancelled, job_url, portal_url, salary, notes, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(
       id,
@@ -160,6 +164,7 @@ app.post("/api/internships", async (c) => {
       internship.status || "Applied",
       (internship.status === "Interview Round" || internship.status === "OA") ? internship.interviewRound?.trim() || null : null,
       internship.rejected ? 1 : 0,
+      internship.cancelled ? 1 : 0,
       internship.jobUrl || null,
       internship.portalUrl || null,
       internship.salary || null,
@@ -198,6 +203,7 @@ app.put("/api/internships/:id", async (c) => {
          status = ?,
          interview_round = ?,
          rejected = ?,
+         cancelled = ?,
          job_url = ?,
          portal_url = ?,
          salary = ?,
@@ -215,6 +221,7 @@ app.put("/api/internships/:id", async (c) => {
       internship.status || "Applied",
       (internship.status === "Interview Round" || internship.status === "OA") ? internship.interviewRound?.trim() || null : null,
       internship.rejected ? 1 : 0,
+      internship.cancelled ? 1 : 0,
       internship.jobUrl || null,
       internship.portalUrl || null,
       internship.salary || null,

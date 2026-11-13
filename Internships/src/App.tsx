@@ -6,7 +6,7 @@ import { FilterBar } from './components/FilterBar';
 import { InternshipTable } from './components/InternshipTable';
 import { InternshipModal } from './components/InternshipModal';
 import { ApplicationFlowModal } from './components/ApplicationFlowModal';
-import { isRejected, hasRounds, savedStageRound } from './utils/internship';
+import { isRejected, isCancelled, matchesStatusFilter, hasRounds, savedStageRound } from './utils/internship';
 import { localDateString } from './utils/date';
 
 const API_URL = '/api/internships';
@@ -132,9 +132,21 @@ export default function App() {
     const updated = {
       ...target,
       rejected: !isRejected(target),
+      cancelled: false,
       updatedAt: localDateString(),
     };
     await saveQuickChange(updated);
+  };
+
+  const handleCancelledChange = async (id: string) => {
+    const target = internships.find(item => item.id === id);
+    if (!target) return;
+    await saveQuickChange({
+      ...target,
+      cancelled: !isCancelled(target),
+      rejected: false,
+      updatedAt: localDateString(),
+    });
   };
 
   // Delete
@@ -174,13 +186,7 @@ export default function App() {
           if (!match) return false;
         }
 
-        if (item.status === 'Withdrawn') {
-          if (statusFilter !== 'Withdrawn') return false;
-        } else if (statusFilter === 'Rejected') {
-          if (!isRejected(item)) return false;
-        } else if (isRejected(item) || (statusFilter !== 'All' && item.status !== statusFilter)) {
-          return false;
-        }
+        if (!matchesStatusFilter(item, statusFilter)) return false;
 
         if (seasonFilter !== 'All' && item.season !== seasonFilter) {
           return false;
@@ -259,6 +265,7 @@ export default function App() {
           onStatusChange={handleStatusChange}
           onRoundChange={handleRoundChange}
           onRejectedChange={handleRejectedChange}
+          onCancelledChange={handleCancelledChange}
           onEdit={(internship) => {
             setEditingInternship(internship);
             setIsModalOpen(true);

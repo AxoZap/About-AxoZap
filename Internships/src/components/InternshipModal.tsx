@@ -30,6 +30,7 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
   const [status, setStatus] = useState<ApplicationStatus>('Applied');
   const [interviewRound, setInterviewRound] = useState('');
   const [rejected, setRejected] = useState(false);
+  const [cancelled, setCancelled] = useState(false);
   const [dateApplied, setDateApplied] = useState('');
   const [salary, setSalary] = useState('');
   const [portalUrl, setPortalUrl] = useState('');
@@ -56,6 +57,7 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
       setStatus(editingInternship.status);
       setInterviewRound(editingInternship.interviewRound || '');
       setRejected(Boolean(editingInternship.rejected));
+      setCancelled(Boolean(editingInternship.cancelled));
       setDateApplied(editingInternship.dateApplied);
       setSalary(editingInternship.salary || '');
       setPortalUrl(editingInternship.portalUrl || '');
@@ -69,6 +71,7 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
       setStatus('Applied');
       setInterviewRound('');
       setRejected(false);
+      setCancelled(false);
       setDateApplied(localDateString());
       setSalary('');
       setPortalUrl('');
@@ -115,6 +118,7 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
           status,
           interviewRound: hasRounds(status) ? interviewRound.trim() || undefined : undefined,
           rejected,
+          cancelled,
           dateApplied: dateApplied || localDateString(),
           salary: salary.trim() || undefined,
           jobUrl: editingInternship?.jobUrl,
@@ -166,7 +170,7 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
               <ol className="mt-3 space-y-2 border-l border-slate-700 pl-3">
                 {editingInternship.statusHistory.map((entry, index) => (
                   <li key={index}>
-                    <div>{statusLabel(entry.status)}{entry.interviewRound ? ` · ${entry.interviewRound}` : ''}{entry.rejected ? ' · Rejected' : ''}</div>
+                    <div>{statusLabel(entry.status)}{entry.interviewRound ? ` · ${entry.interviewRound}` : ''}{entry.rejected ? ' · Rejected' : ''}{entry.cancelled ? ' · Cancelled' : ''}</div>
                     <div className="mt-0.5 text-[10px] text-slate-500">{new Date(entry.recordedAt).toLocaleString()}{entry.baseline ? ' · First recorded; earlier stages unknown' : ''}</div>
                   </li>
                 ))}
@@ -245,8 +249,12 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
           </div>
 
           <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-            <input type="checkbox" checked={rejected} onChange={(e) => setRejected(e.target.checked)} className="accent-rose-500" />
+            <input type="checkbox" checked={rejected} onChange={(e) => { setRejected(e.target.checked); if (e.target.checked) setCancelled(false); }} className="accent-rose-500" />
             Rejected (show beside the application stage)
+          </label>
+          <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+            <input type="checkbox" checked={cancelled} onChange={(e) => { setCancelled(e.target.checked); if (e.target.checked) setRejected(false); }} className="accent-orange-500" />
+            Cancelled (hide from normal view; keep the application stage)
           </label>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

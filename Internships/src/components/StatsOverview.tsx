@@ -1,6 +1,6 @@
 import React from 'react';
 import { Internship } from '../types/internship';
-import { isRejected } from '../utils/internship';
+import { isRejected, isCancelled } from '../utils/internship';
 import { Briefcase, Users, Trophy, XCircle, Clock } from 'lucide-react';
 
 interface StatsOverviewProps {
@@ -10,7 +10,7 @@ interface StatsOverviewProps {
 export const StatsOverview: React.FC<StatsOverviewProps> = ({ internships }) => {
   const total = internships.length;
   const applied = internships.filter(i => i.status !== 'Bookmarked').length;
-  const active = internships.filter(i => !isRejected(i));
+  const active = internships.filter(i => !isRejected(i) && !isCancelled(i));
   const interviews = active.filter(i => i.status === 'Interview Round').length;
   const offers = active.filter(i => i.status === 'Offer').length;
   const rejected = internships.filter(isRejected).length;
