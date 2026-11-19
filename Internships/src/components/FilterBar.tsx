@@ -78,6 +78,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           <optgroup label="Overall status">
             {overallStatuses.map(status => <option key={status} value={status}>{status}</option>)}
           </optgroup>
+          <option value="Closed">Closed (Withdrawn + Removed)</option>
           <optgroup label="Applied progress">
             {progressStages.map(stage => <option key={stage} value={stage}>{stage}</option>)}
           </optgroup>

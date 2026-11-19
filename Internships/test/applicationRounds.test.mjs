@@ -18,7 +18,7 @@ test('restores a previous stage round without inventing a count', () => {
 });
 
 
-test('all five overall statuses and three Applied progress filters are mutually consistent', () => {
+test('all six overall statuses and three Applied progress filters are mutually consistent', () => {
   const statuses = [
     [{status:'Applied'}, 'Applied', 'Application'],
     [{status:'OA',interviewRound:'2'}, 'Applied', 'Assessment'],
@@ -26,12 +26,14 @@ test('all five overall statuses and three Applied progress filters are mutually 
     [{status:'OA',rejected:true}, 'Rejected'],
     [{status:'Interview Round',cancelled:true}, 'Withdrawn'],
     [{status:'Withdrawn'}, 'Withdrawn'],
+    [{status:'Removed'}, 'Removed'],
     [{status:'Bookmarked'}, 'Bookmarked'],
     [{status:'Offer'}, 'Offer'],
   ];
   for (const [item, main, stage] of statuses) {
     assert.equal(matchesStatusFilter(item,'All'),true);
-    for (const filter of ['Applied','Rejected','Withdrawn','Bookmarked','Offer','Application','Assessment','Interview']) {
+    assert.equal(matchesStatusFilter(item,'Closed'),main === 'Withdrawn' || main === 'Removed');
+    for (const filter of ['Applied','Rejected','Withdrawn','Removed','Bookmarked','Offer','Application','Assessment','Interview']) {
       assert.equal(matchesStatusFilter(item,filter), filter === main || filter === stage, `${JSON.stringify(item)} in ${filter}`);
     }
   }

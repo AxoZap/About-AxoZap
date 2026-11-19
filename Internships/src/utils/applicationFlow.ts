@@ -99,7 +99,8 @@ export function buildApplicationFlow(internships: Internship[]) {
       connect(previousKey, key);
       previousKey = key;
     });
-    const outcome = main === 'Withdrawn' ? { key: 'outcome:withdrawn', label: 'Withdrawn', color: '#8493a6', order: -2 }
+    const outcome = main === 'Removed' ? { key: 'outcome:removed', label: 'Removed', color: '#d99558', order: -3 }
+      : main === 'Withdrawn' ? { key: 'outcome:withdrawn', label: 'Withdrawn', color: '#8493a6', order: -2 }
       : main === 'Rejected' ? { key: 'outcome:rejected', label: 'Rejected', color: '#d46d7e', order: -1 }
       : { key: `outcome:${internship.status}`, label: currentStage.pending, color: currentStage.color, order: stages.indexOf(currentStage) };
     const { key } = outcome;

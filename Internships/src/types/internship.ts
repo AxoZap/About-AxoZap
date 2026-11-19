@@ -4,12 +4,13 @@ export const applicationStatuses = [
   'Interview Round',
   'Offer',
   'Withdrawn',
+  'Removed',
   'Bookmarked',
 ] as const;
 
 export type ApplicationStatus = typeof applicationStatuses[number];
 
-export const overallStatuses = ['Applied', 'Rejected', 'Withdrawn', 'Bookmarked', 'Offer'] as const;
+export const overallStatuses = ['Applied', 'Rejected', 'Withdrawn', 'Removed', 'Bookmarked', 'Offer'] as const;
 export type OverallStatus = typeof overallStatuses[number];
 export const progressStages = ['Application', 'Assessment', 'Interview'] as const;
 export type ProgressStage = typeof progressStages[number];

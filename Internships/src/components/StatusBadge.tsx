@@ -69,6 +69,13 @@ export const statusConfig: Record<
     dot: 'bg-orange-400',
     icon: Ban,
   },
+  'Removed': {
+    bg: 'bg-orange-950/40',
+    text: 'text-orange-300',
+    border: 'border-orange-900/50',
+    dot: 'bg-orange-400',
+    icon: Ban,
+  },
   'Withdrawn': {
     bg: 'bg-neutral-900/50',
     text: 'text-neutral-400',

@@ -5,6 +5,7 @@ export type StatusChange = Pick<Internship, 'status' | 'interviewRound' | 'rejec
 
 // Keep the existing D1 stage and outcome fields, including all recorded history.
 export function overallStatus(item: Pick<Internship, 'status' | 'rejected' | 'cancelled'>): OverallStatus {
+  if (item.status === 'Removed') return 'Removed';
   if (item.cancelled || item.status === 'Withdrawn') return 'Withdrawn';
   if (item.rejected) return 'Rejected';
   if (item.status === 'Bookmarked' || item.status === 'Offer') return item.status;
@@ -28,6 +29,7 @@ export function progressStage(item: StatusSelection): ProgressStage {
 export function matchesStatusFilter(item: Internship, filter: string): boolean {
   if (filter === 'All') return true;
   const main = overallStatus(item);
+  if (filter === 'Closed') return main === 'Withdrawn' || main === 'Removed';
   if (['Application', 'Assessment', 'Interview'].includes(filter)) {
     return main === 'Applied' && progressStage(item) === filter;
   }
@@ -51,7 +53,7 @@ export function savedStageRound(item: Pick<Internship, 'status' | 'interviewRoun
 }
 
 export function changeOverallStatus(item: StatusSelection, next: OverallStatus): StatusChange {
-  const status = next === 'Offer' || next === 'Bookmarked' ? next : progressStatus(item);
+  const status = next === 'Offer' || next === 'Bookmarked' || next === 'Removed' ? next : progressStatus(item);
   return {
     status,
     interviewRound: savedStageRound(item, status) || undefined,
@@ -66,7 +68,7 @@ export function changeProgressStage(item: StatusSelection, stage: ProgressStage)
 }
 
 export function statusCounts(items: Internship[]) {
-  const counts: Record<OverallStatus, number> = { Applied: 0, Rejected: 0, Withdrawn: 0, Bookmarked: 0, Offer: 0 };
+  const counts: Record<OverallStatus, number> = { Applied: 0, Rejected: 0, Withdrawn: 0, Removed: 0, Bookmarked: 0, Offer: 0 };
   for (const item of items) counts[overallStatus(item)] += 1;
   return counts;
 }

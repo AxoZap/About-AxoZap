@@ -5,7 +5,7 @@ import { buildApplicationFlow } from '../src/utils/applicationFlow.ts';
 
 test('outcome changes preserve the stage and round and resume without advancing', () => {
   const initial = {status:'OA', interviewRound:'2'};
-  for (const outcome of ['Rejected','Withdrawn','Bookmarked','Offer']) {
+  for (const outcome of ['Rejected','Withdrawn','Removed','Bookmarked','Offer']) {
     const changed = {...initial, ...changeOverallStatus(initial, outcome), statusHistory:[{...initial}]};
     assert.equal(overallStatus(changed), outcome);
     const resumed = {...changed, ...changeOverallStatus(changed, 'Applied')};
@@ -30,7 +30,7 @@ test('choosing a stage preserves its saved number and clears terminal flags', ()
 test('summary categories partition the entire tracker including legacy outcomes', () => {
   const records = [{status:'Applied'},{status:'OA'},{status:'Interview Round'},{status:'Offer'},{status:'Bookmarked'},{status:'OA',rejected:true},{status:'Withdrawn'},{status:'Interview Round',cancelled:true}];
   const counts = statusCounts(records);
-  assert.deepEqual(counts,{Applied:3,Rejected:1,Withdrawn:2,Bookmarked:1,Offer:1});
+  assert.deepEqual(counts,{Applied:3,Rejected:1,Withdrawn:2,Removed:0,Bookmarked:1,Offer:1});
   assert.equal(Object.values(counts).reduce((a,b)=>a+b,0),records.length);
 });
 
@@ -58,4 +58,18 @@ test('term chronology stays primary while the selected field and direction sort 
   ];
   assert.deepEqual([...records].sort((a,b)=>compareInternships(a,b,'dateApplied','desc')).map(i=>i.id), ['winter','summer-new','summer-old','fall','spring']);
   assert.deepEqual([...records].sort((a,b)=>compareInternships(a,b,'company','asc')).map(i=>i.id), ['winter','summer-old','summer-new','fall','spring']);
+});
+
+test('Removed retains progress in history, has its own flow endpoint, and counts as Closed', () => {
+  const original = {status:'Interview Round',interviewRound:'2',statusHistory:[{status:'Applied'},{status:'Interview Round',interviewRound:'2'}]};
+  const removed = {...original,...changeOverallStatus(original,'Removed')};
+  assert.equal(overallStatus(removed),'Removed');
+  const flow=buildApplicationFlow([removed]);
+  assert.equal(flow.nodes.find(n=>n.label==='Removed').count,1);
+  assert.ok(flow.nodes.some(n=>n.label==='Interview · 2'));
+  const resumed={...removed,...changeOverallStatus(removed,'Applied')};
+  assert.equal(resumed.status,'Interview Round');
+  assert.equal(resumed.interviewRound,'2');
+  const counts=statusCounts([removed,{status:'Withdrawn'},{status:'Applied'}]);
+  assert.equal(counts.Removed+counts.Withdrawn,2);
 });

@@ -100,7 +100,7 @@ it('returns persisted history after create, edit and reload and ignores client h
   }
   // Main status changes retain and restore the saved progress and round.
   let current = persisted;
-  for (const main of ['Bookmarked', 'Applied', 'Offer', 'Applied', 'Rejected', 'Withdrawn', 'Applied'] as const) {
+  for (const main of ['Bookmarked', 'Applied', 'Offer', 'Applied', 'Rejected', 'Withdrawn', 'Removed', 'Applied'] as const) {
     const response = await request('PUT', '/test', { ...current, ...changeOverallStatus(current, main) });
     expect(response.status).toBe(200);
     current = await response.json<any>();
