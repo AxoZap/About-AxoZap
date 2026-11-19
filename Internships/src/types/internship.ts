@@ -9,6 +9,11 @@ export const applicationStatuses = [
 
 export type ApplicationStatus = typeof applicationStatuses[number];
 
+export const overallStatuses = ['Applied', 'Rejected', 'Withdrawn', 'Bookmarked', 'Offer'] as const;
+export type OverallStatus = typeof overallStatuses[number];
+export const progressStages = ['Application', 'Assessment', 'Interview'] as const;
+export type ProgressStage = typeof progressStages[number];
+
 export interface StatusHistoryEntry {
   status: ApplicationStatus;
   interviewRound?: string; // Current OA or Interview round; retained API field name for compatibility.

@@ -1,8 +1,9 @@
 import type { ApplicationStatus, Internship } from '../types/internship';
+import { overallStatus } from './internship.ts';
 
 const stages: { status: ApplicationStatus; label: string; pending: string; color: string }[] = [
   { status: 'Applied', label: 'Applied', pending: 'Awaiting response', color: '#d99b35' },
-  { status: 'OA', label: 'Online assessment', pending: 'Assessment stage', color: '#5695c8' },
+  { status: 'OA', label: 'Assessment', pending: 'Assessment stage', color: '#5695c8' },
   { status: 'Interview Round', label: 'Interview', pending: 'Awaiting decision', color: '#8b78d2' },
   { status: 'Offer', label: 'Offer', pending: 'Offer received', color: '#41a584' },
   { status: 'Withdrawn', label: 'Withdrawn', pending: 'Withdrawn', color: '#8493a6' },
@@ -58,8 +59,9 @@ export function buildApplicationFlow(internships: Internship[]) {
   }
 
   for (const internship of internships) {
-    if (internship.status === 'Bookmarked') continue;
-    const currentStage = stages.find(stage => stage.status === internship.status);
+    const main = overallStatus(internship);
+    if (main === 'Bookmarked') continue;
+    const currentStage = stages.find(stage => stage.status === internship.status) || stages[0];
     if (!currentStage) continue;
     total += 1;
     if (!internship.statusHistory?.length || internship.statusHistory[0].baseline) baseline += 1;
@@ -97,8 +99,8 @@ export function buildApplicationFlow(internships: Internship[]) {
       connect(previousKey, key);
       previousKey = key;
     });
-    const outcome = internship.cancelled ? { key: 'outcome:cancelled', label: 'Cancelled', color: '#d99558', order: -2 }
-      : internship.rejected ? { key: 'outcome:rejected', label: 'Rejected', color: '#d46d7e', order: -1 }
+    const outcome = main === 'Withdrawn' ? { key: 'outcome:withdrawn', label: 'Withdrawn', color: '#8493a6', order: -2 }
+      : main === 'Rejected' ? { key: 'outcome:rejected', label: 'Rejected', color: '#d46d7e', order: -1 }
       : { key: `outcome:${internship.status}`, label: currentStage.pending, color: currentStage.color, order: stages.indexOf(currentStage) };
     const { key } = outcome;
     visit({
@@ -132,7 +134,7 @@ export function buildApplicationFlow(internships: Internship[]) {
     links: [...links.values()],
     total,
     baseline,
-    bookmarked: internships.filter(item => item.status === 'Bookmarked').length,
+    bookmarked: internships.filter(item => overallStatus(item) === 'Bookmarked').length,
   };
 }
 

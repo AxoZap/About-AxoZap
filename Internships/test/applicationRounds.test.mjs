@@ -18,17 +18,21 @@ test('restores a previous stage round without inventing a count', () => {
 });
 
 
-test('cancelled applications only appear in their own filter, regardless of stored stage', () => {
-  for (const status of ['Applied', 'OA', 'Interview Round', 'Offer', 'Withdrawn', 'Bookmarked']) {
-    const item = { status, cancelled: true };
-    for (const filter of ['All', 'Applied', 'OA', 'Interview Round', 'Offer', 'Rejected', 'Withdrawn', 'Bookmarked']) {
-      assert.equal(matchesStatusFilter(item, filter), false, `${status} in ${filter}`);
+test('all five overall statuses and three Applied progress filters are mutually consistent', () => {
+  const statuses = [
+    [{status:'Applied'}, 'Applied', 'Application'],
+    [{status:'OA',interviewRound:'2'}, 'Applied', 'Assessment'],
+    [{status:'Interview Round'}, 'Applied', 'Interview'],
+    [{status:'OA',rejected:true}, 'Rejected'],
+    [{status:'Interview Round',cancelled:true}, 'Withdrawn'],
+    [{status:'Withdrawn'}, 'Withdrawn'],
+    [{status:'Bookmarked'}, 'Bookmarked'],
+    [{status:'Offer'}, 'Offer'],
+  ];
+  for (const [item, main, stage] of statuses) {
+    assert.equal(matchesStatusFilter(item,'All'),true);
+    for (const filter of ['Applied','Rejected','Withdrawn','Bookmarked','Offer','Application','Assessment','Interview']) {
+      assert.equal(matchesStatusFilter(item,filter), filter === main || filter === stage, `${JSON.stringify(item)} in ${filter}`);
     }
-    assert.equal(matchesStatusFilter(item, 'Cancelled'), true);
-    assert.equal(matchesStatusFilter({ ...item, cancelled: false }, 'Cancelled'), false);
   }
-  assert.equal(matchesStatusFilter({status: 'OA', cancelled: false}, 'All'), true);
-  assert.equal(matchesStatusFilter({status: 'OA', cancelled: false}, 'OA'), true);
-  assert.equal(matchesStatusFilter({status: 'OA', rejected: true}, 'Rejected'), true);
-  assert.equal(matchesStatusFilter({status: 'OA', rejected: true}, 'All'), false);
 });

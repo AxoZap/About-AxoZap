@@ -4,6 +4,7 @@ import { beforeEach, afterEach, expect, it, vi } from 'vitest';
 import { exportJWK, generateKeyPair, SignJWT } from 'jose';
 import app from '../src/index';
 import schema from '../schema.sql?raw';
+import { changeOverallStatus, overallStatus } from '../../src/utils/internship';
 
 const bindings = env as { axozap_internships_db: D1Database; TEST_MIGRATIONS: D1Migration[]; CF_ACCESS_TEAM_DOMAIN: string; CF_ACCESS_AUD: string; SQL_OWNER_EMAIL: string; SQL_ALLOWED_ORIGIN: string };
 const db = bindings.axozap_internships_db;
@@ -97,7 +98,23 @@ it('returns persisted history after create, edit and reload and ignores client h
     expect(saved.statusHistory.at(-1)).toMatchObject({ cancelled, status: 'Interview Round', interviewRound: '3' });
     expect((await (await request('GET', '')).json<any>())[0]).toMatchObject({ cancelled, statusHistory: saved.statusHistory });
   }
-  expect((await request('PUT', '/test', initial)).status).toBe(409);
+  // Main status changes retain and restore the saved progress and round.
+  let current = persisted;
+  for (const main of ['Bookmarked', 'Applied', 'Offer', 'Applied', 'Rejected', 'Withdrawn', 'Applied'] as const) {
+    const response = await request('PUT', '/test', { ...current, ...changeOverallStatus(current, main) });
+    expect(response.status).toBe(200);
+    current = await response.json<any>();
+    expect(overallStatus(current)).toBe(main);
+    if (main === 'Applied') expect(current).toMatchObject({ status: 'Interview Round', interviewRound: '3', rejected: false, cancelled: false });
+  }
+  // An offer that skipped both Assessment and Interview can also resume Applied.
+  const offer = await (await request('POST', '', { ...initial, id: 'offer', status: 'Offer' })).json<any>();
+  const resumedResponse = await request('PUT', '/offer', { ...offer, ...changeOverallStatus(offer, 'Applied') });
+  expect(resumedResponse.status).toBe(200);
+  const resumed = await resumedResponse.json<any>();
+  expect(resumed.status).toBe('Applied');
+  expect(resumed.statusHistory.map((entry: any) => entry.status)).toEqual(['Applied', 'Offer', 'Applied']);
+  expect((await request('PUT', '/test', initial)).status).toBe(200);
   expect((await request('PUT', '/missing', initial)).status).toBe(404);
 });
 
@@ -114,14 +131,14 @@ it('new advanced-stage records and activated bookmarks get an Applied starting s
   await migrate();
   await insert('Offer');
   expect((await history()).results.map(row => row.status)).toEqual(['Applied', 'Offer']);
-  await expect(db.prepare("UPDATE internships SET status = 'Applied' WHERE id = 'test'").run()).rejects.toThrow('Applied is the starting stage');
+  await db.prepare("UPDATE internships SET status = 'Applied' WHERE id = 'test'").run();
   await db.prepare("DELETE FROM internships WHERE id = 'test'").run();
   await insert('Bookmarked');
   expect((await history()).results.map(row => row.status)).toEqual(['Bookmarked']);
   await db.prepare("UPDATE internships SET status = 'OA' WHERE id = 'test'").run();
   expect((await history()).results.map(row => row.status)).toEqual(['Applied', 'Bookmarked', 'OA']);
   await db.prepare("UPDATE internships SET status = 'Bookmarked' WHERE id = 'test'").run();
-  await expect(db.prepare("UPDATE internships SET status = 'Applied' WHERE id = 'test'").run()).rejects.toThrow('Applied is the starting stage');
+  await db.prepare("UPDATE internships SET status = 'Applied' WHERE id = 'test'").run();
 });
 
 

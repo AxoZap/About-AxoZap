@@ -8,7 +8,8 @@
     "build": "tsc && vite build",
     "test:flow": "node --experimental-strip-types test/applicationFlow.test.mjs",
     "preview": "vite preview",
-    "test:rounds": "node --experimental-strip-types test/applicationRounds.test.mjs"
+    "test:rounds": "node --experimental-strip-types test/applicationRounds.test.mjs",
+    "test": "npm run test:flow && npm run test:rounds && node --experimental-strip-types test/statusModel.test.mjs"
   },
   "dependencies": {
     "clsx": "^2.1.1",

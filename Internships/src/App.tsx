@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Plus } from 'lucide-react';
-import { Internship, ApplicationStatus } from './types/internship';
+import { Internship } from './types/internship';
 import { StatsHeader } from './components/StatsHeader';
 import { FilterBar } from './components/FilterBar';
 import { InternshipTable } from './components/InternshipTable';
 import { InternshipModal } from './components/InternshipModal';
 import { ApplicationFlowModal } from './components/ApplicationFlowModal';
-import { isRejected, isCancelled, matchesStatusFilter, hasRounds, savedStageRound } from './utils/internship';
+import { matchesStatusFilter, hasRounds, overallStatus, compareInternships, type StatusChange } from './utils/internship';
 import { localDateString } from './utils/date';
 
 const API_URL = '/api/internships';
@@ -26,7 +26,7 @@ export default function App() {
   const [error, setError] = useState('');
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('Applied');
   const [seasonFilter, setSeasonFilter] = useState('All');
   const [workModelFilter, setWorkModelFilter] = useState('All');
   const [sortBy, setSortBy] = useState<'dateApplied' | 'company' | 'status' | 'updatedAt'>('dateApplied');
@@ -104,68 +104,24 @@ export default function App() {
     }
   };
 
-  // Quick inline status change
-  const handleStatusChange = async (id: string, newStatus: ApplicationStatus) => {
-    const now = localDateString();
-    const target = internships.find((i) => i.id === id);
-    if (!target || target.status === newStatus) return;
-
-    const updated = {
-      ...target,
-      status: newStatus,
-      interviewRound: savedStageRound(target, newStatus) || undefined,
-      updatedAt: now,
-    };
-    await saveQuickChange(updated);
+  const handleStatusChange = async (id: string, change: StatusChange) => {
+    const target = internships.find(item => item.id === id);
+    if (!target) return;
+    if (target.status === change.status && (target.interviewRound || '') === (change.interviewRound || '') &&
+      Boolean(target.rejected) === Boolean(change.rejected) && Boolean(target.cancelled) === Boolean(change.cancelled)) return;
+    await saveQuickChange({ ...target, ...change, updatedAt: localDateString() });
   };
 
   const handleRoundChange = async (id: string, round: string) => {
     const target = internships.find(item => item.id === id);
-    if (!target || !hasRounds(target.status)) return;
+    if (!target || overallStatus(target) !== 'Applied' || !hasRounds(target.status)) return;
     await saveQuickChange({ ...target, interviewRound: round.trim() || undefined, updatedAt: localDateString() });
-  };
-
-  const handleRejectedChange = async (id: string) => {
-    const target = internships.find((item) => item.id === id);
-    if (!target) return;
-
-    const updated = {
-      ...target,
-      rejected: !isRejected(target),
-      cancelled: false,
-      updatedAt: localDateString(),
-    };
-    await saveQuickChange(updated);
-  };
-
-  const handleCancelledChange = async (id: string) => {
-    const target = internships.find(item => item.id === id);
-    if (!target) return;
-    await saveQuickChange({
-      ...target,
-      cancelled: !isCancelled(target),
-      rejected: false,
-      updatedAt: localDateString(),
-    });
-  };
-
-  // Delete
-  const handleDelete = async (id: string) => {
-    try {
-      await apiRequest<{ success: boolean }>(`${API_URL}/${id}`, {
-        method: 'DELETE',
-      });
-      setInternships((prev) => prev.filter((item) => item.id !== id));
-      setError('');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not delete the application.');
-    }
   };
 
   // Reset filters
   const handleResetFilters = () => {
     setSearchQuery('');
-    setStatusFilter('All');
+    setStatusFilter('Applied');
     setSeasonFilter('All');
     setWorkModelFilter('All');
     setSortBy('dateApplied');
@@ -198,19 +154,7 @@ export default function App() {
 
         return true;
       })
-      .sort((a, b) => {
-        let cmp = 0;
-        if (sortBy === 'company') {
-          cmp = a.company.localeCompare(b.company);
-        } else if (sortBy === 'status') {
-          cmp = a.status.localeCompare(b.status);
-        } else if (sortBy === 'updatedAt') {
-          cmp = (a.updatedAt || '').localeCompare(b.updatedAt || '');
-        } else {
-          cmp = (a.dateApplied || '').localeCompare(b.dateApplied || '');
-        }
-        return sortOrder === 'asc' ? cmp : -cmp;
-      });
+      .sort((a, b) => compareInternships(a, b, sortBy, sortOrder));
   }, [internships, searchQuery, statusFilter, seasonFilter, workModelFilter, sortBy, sortOrder]);
 
   return (
@@ -264,18 +208,15 @@ export default function App() {
           internships={filteredInternships}
           onStatusChange={handleStatusChange}
           onRoundChange={handleRoundChange}
-          onRejectedChange={handleRejectedChange}
-          onCancelledChange={handleCancelledChange}
           onEdit={(internship) => {
             setEditingInternship(internship);
             setIsModalOpen(true);
           }}
-          onDelete={handleDelete}
         />
       </div>
 
       {/* Add / Edit Modal */}
-      {isFlowOpen && <ApplicationFlowModal internships={internships} onClose={closeFlow} />}
+      {isFlowOpen && <ApplicationFlowModal internships={internships} initialTimeFrame={seasonFilter} onClose={closeFlow} />}
       <InternshipModal
         isOpen={isModalOpen}
         onClose={() => {

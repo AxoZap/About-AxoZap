@@ -1,7 +1,6 @@
 import React from 'react';
-import { statusLabel } from '../utils/internship';
 import { Search, ArrowUpDown, X } from 'lucide-react';
-import { applicationStatuses, termSeasons, TermSeason, WorkModel } from '../types/internship';
+import { overallStatuses, progressStages, termSeasons, TermSeason, WorkModel } from '../types/internship';
 
 interface FilterBarProps {
   searchQuery: string;
@@ -18,14 +17,6 @@ interface FilterBarProps {
   setSortOrder: (order: 'asc' | 'desc') => void;
   onResetFilters: () => void;
 }
-
-const statusOptions = [
-  'All',
-  ...applicationStatuses.slice(0, 4),
-  'Rejected',
-  'Cancelled',
-  ...applicationStatuses.slice(4),
-] as const;
 
 const seasonOptions: ('All' | TermSeason)[] = ['All', ...termSeasons];
 
@@ -48,7 +39,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 }) => {
   const isFiltered =
     searchQuery !== '' ||
-    statusFilter !== 'All' ||
+    statusFilter !== 'Applied' ||
     seasonFilter !== 'All' ||
     workModelFilter !== 'All';
 
@@ -78,19 +69,23 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       <div className="flex items-center gap-2 w-full md:w-auto flex-wrap justify-end text-xs">
         {/* Status */}
         <select
+          aria-label="Filter by status"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
           className="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-300 focus:outline-none focus:border-slate-600 cursor-pointer font-medium"
         >
-          {statusOptions.map((s) => (
-            <option key={s} value={s} className="bg-slate-900">
-              {s === 'All' ? 'All Statuses' : statusLabel(s)}
-            </option>
-          ))}
+          <option value="All">All Statuses</option>
+          <optgroup label="Overall status">
+            {overallStatuses.map(status => <option key={status} value={status}>{status}</option>)}
+          </optgroup>
+          <optgroup label="Applied progress">
+            {progressStages.map(stage => <option key={stage} value={stage}>{stage}</option>)}
+          </optgroup>
         </select>
 
         {/* Season */}
         <select
+          aria-label="Filter by time frame"
           value={seasonFilter}
           onChange={(e) => setSeasonFilter(e.target.value)}
           className="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-300 focus:outline-none focus:border-slate-600 cursor-pointer font-medium"
@@ -115,8 +110,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           ))}
         </select>
 
-        {/* Sort */}
-        <div className="flex items-center bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-slate-300">
+        {/* Sort within the fixed chronological term order. */}
+        <div title="Terms are ordered chronologically; this sorts within each term." className="flex items-center bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-slate-300">
           <ArrowUpDown className="w-3 h-3 text-slate-400 mr-1.5" />
           <select
             value={sortBy}

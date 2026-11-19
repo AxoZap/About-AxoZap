@@ -3,35 +3,25 @@ import {
   Building2, 
   MapPin, 
   ExternalLink, 
-  Trash2, 
   Edit3, 
   Calendar,
-  XCircle,
-  Ban,
 } from 'lucide-react';
-import { Internship, ApplicationStatus } from '../types/internship';
+import { Internship } from '../types/internship';
 import { StatusDropdown } from './StatusDropdown';
-import { StatusBadge } from './StatusBadge';
-import { isRejected, isCancelled, hasProgressedPastApplied } from '../utils/internship';
+import type { StatusChange } from '../utils/internship';
 
 interface InternshipTableProps {
   internships: Internship[];
-  onStatusChange: (id: string, newStatus: ApplicationStatus) => Promise<void>;
+  onStatusChange: (id: string, change: StatusChange) => Promise<void>;
   onRoundChange: (id: string, round: string) => Promise<void>;
-  onRejectedChange: (id: string) => void;
-  onCancelledChange: (id: string) => void;
   onEdit: (internship: Internship) => void;
-  onDelete: (id: string) => void;
 }
 
 export const InternshipTable: React.FC<InternshipTableProps> = ({
   internships,
   onStatusChange,
   onRoundChange,
-  onRejectedChange,
-  onCancelledChange,
   onEdit,
-  onDelete,
 }) => {
   if (internships.length === 0) {
     return (
@@ -49,13 +39,13 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
         <table className="w-full min-w-[1280px] table-fixed text-left border-collapse">
           <colgroup>
             <col className="w-60" />
-            <col className="w-36" />
+            <col className="w-40" />
             <col className="w-32" />
             <col className="w-36" />
             <col className="w-44" />
             <col />
             <col className="w-28" />
-            <col className="w-40" />
+            <col className="w-20" />
           </colgroup>
           <thead>
             <tr className="border-b border-slate-800 bg-slate-900/80 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
@@ -100,14 +90,10 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
                 <td className="py-3.5 px-3">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <StatusDropdown
-                      status={item.status}
-                      appliedDisabled={hasProgressedPastApplied(item)}
-                      interviewRound={item.interviewRound}
+                      value={item}
                       onRoundChange={(round) => onRoundChange(item.id, round)}
                       onChange={(newStatus) => onStatusChange(item.id, newStatus)}
                     />
-                    {isRejected(item) && <StatusBadge status="Rejected" size="sm" />}
-                    {isCancelled(item) && <StatusBadge status="Cancelled" size="sm" />}
                   </div>
                 </td>
 
@@ -165,42 +151,12 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
                 <td className="py-3.5 px-4 text-right">
                   <div className="flex items-center justify-end gap-1 whitespace-nowrap">
                     <button
-                      onClick={() => onRejectedChange(item.id)}
-                      aria-pressed={isRejected(item)}
-                      className={`p-1.5 rounded-lg transition-colors ${isRejected(item) ? 'text-rose-300 bg-rose-950/50 hover:bg-rose-900/50' : 'text-slate-400 hover:text-rose-300 hover:bg-slate-800'}`}
-                      title={isRejected(item) ? 'Undo rejection' : 'Mark as rejected'}
-                      aria-label={isRejected(item) ? 'Undo rejection' : 'Mark as rejected'}
-                    >
-                      <XCircle className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => onCancelledChange(item.id)}
-                      aria-pressed={isCancelled(item)}
-                      className={`p-1.5 rounded-lg transition-colors ${isCancelled(item) ? 'text-orange-300 bg-orange-950/50 hover:bg-orange-900/50' : 'text-slate-400 hover:text-orange-300 hover:bg-slate-800'}`}
-                      title={isCancelled(item) ? 'Undo cancellation' : 'Mark as cancelled'}
-                      aria-label={isCancelled(item) ? 'Undo cancellation' : 'Mark as cancelled'}
-                    >
-                      <Ban className="w-3.5 h-3.5" />
-                    </button>
-                    <button
                       onClick={() => onEdit(item)}
                       className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-400 hover:bg-slate-800 transition-colors"
                       title="Edit"
                       aria-label={`Edit ${item.company}`}
                     >
                       <Edit3 className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (confirm(`Remove ${item.company}?`)) {
-                          onDelete(item.id);
-                        }
-                      }}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
-                      title="Delete"
-                      aria-label={`Delete ${item.company}`}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </td>

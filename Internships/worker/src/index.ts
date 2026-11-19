@@ -182,13 +182,6 @@ app.put("/api/internships/:id", async (c) => {
   const body = await c.req.json();
   const { internship } = body;
 
-  if ((internship.status || 'Applied') === 'Applied') {
-    const advanced = await c.env.axozap_internships_db.prepare(
-      "SELECT 1 FROM internship_status_history WHERE internship_id = ? AND status NOT IN ('Applied', 'Bookmarked') LIMIT 1"
-    ).bind(id).first();
-    if (advanced) return c.json({ error: 'Applied is the starting stage and cannot follow another stage.' }, 409);
-  }
-
   const now = new Date().toISOString().split("T")[0];
 
   await c.env.axozap_internships_db

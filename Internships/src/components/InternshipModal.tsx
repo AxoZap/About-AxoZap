@@ -3,7 +3,7 @@ import { X, Building2, MapPin, DollarSign, Globe, FileText, Calendar, Code2 } fr
 import { Internship, ApplicationStatus, termSeasons, WorkModel, TermSeason } from '../types/internship';
 import { StatusDropdown } from './StatusDropdown';
 import { localDateString } from '../utils/date';
-import { hasProgressedPastApplied, hasRounds, savedStageRound, statusLabel } from '../utils/internship';
+import { hasRounds, statusLabel } from '../utils/internship';
 
 interface InternshipModalProps {
   isOpen: boolean;
@@ -170,7 +170,7 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
               <ol className="mt-3 space-y-2 border-l border-slate-700 pl-3">
                 {editingInternship.statusHistory.map((entry, index) => (
                   <li key={index}>
-                    <div>{statusLabel(entry.status)}{entry.interviewRound ? ` · ${entry.interviewRound}` : ''}{entry.rejected ? ' · Rejected' : ''}{entry.cancelled ? ' · Cancelled' : ''}</div>
+                    <div>{statusLabel(entry.status)}{entry.interviewRound ? ` · ${entry.interviewRound}` : ''}{entry.rejected ? ' · Rejected' : ''}{entry.cancelled ? ' · Withdrawn' : ''}</div>
                     <div className="mt-0.5 text-[10px] text-slate-500">{new Date(entry.recordedAt).toLocaleString()}{entry.baseline ? ' · First recorded; earlier stages unknown' : ''}</div>
                   </li>
                 ))}
@@ -224,13 +224,13 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">Application Status</label>
               <StatusDropdown
-                status={status}
-                interviewRound={interviewRound}
+                value={{ ...editingInternship, status, interviewRound, rejected, cancelled }}
                 onRoundChange={setInterviewRound}
-                appliedDisabled={Boolean(editingInternship && hasProgressedPastApplied(editingInternship))}
-                onChange={(nextStatus) => {
-                  setInterviewRound(savedStageRound({ ...editingInternship, status, interviewRound }, nextStatus));
-                  setStatus(nextStatus);
+                onChange={(change) => {
+                  setStatus(change.status);
+                  setInterviewRound(change.interviewRound || '');
+                  setRejected(Boolean(change.rejected));
+                  setCancelled(Boolean(change.cancelled));
                 }}
               />
             </div>
@@ -247,15 +247,6 @@ export const InternshipModal: React.FC<InternshipModalProps> = ({
               />
             </div>
           </div>
-
-          <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-            <input type="checkbox" checked={rejected} onChange={(e) => { setRejected(e.target.checked); if (e.target.checked) setCancelled(false); }} className="accent-rose-500" />
-            Rejected (show beside the application stage)
-          </label>
-          <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-            <input type="checkbox" checked={cancelled} onChange={(e) => { setCancelled(e.target.checked); if (e.target.checked) setRejected(false); }} className="accent-orange-500" />
-            Cancelled (hide from normal view; keep the application stage)
-          </label>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>

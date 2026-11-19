@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Download, X } from 'lucide-react';
 import type { Internship } from '../types/internship';
 import { buildApplicationFlow, layoutApplicationFlow } from '../utils/applicationFlow';
+import { applicationsInTimeFrame, flowTimeFrames } from '../utils/internship';
 
 interface ApplicationFlowModalProps {
   internships: Internship[];
+  initialTimeFrame?: string;
   onClose: () => void;
 }
 
@@ -14,8 +16,11 @@ function ribbon(x1: number, y1: number, x2: number, y2: number, height: number) 
   return `M${x1},${y1} C${middle},${y1} ${middle},${y2} ${x2},${y2} L${x2},${y2 + height} C${middle},${y2 + height} ${middle},${y1 + height} ${x1},${y1 + height} Z`;
 }
 
-export function ApplicationFlowModal({ internships, onClose }: ApplicationFlowModalProps) {
-  const flow = useMemo(() => buildApplicationFlow(internships), [internships]);
+export function ApplicationFlowModal({ internships, initialTimeFrame = 'All', onClose }: ApplicationFlowModalProps) {
+  const [timeFrame, setTimeFrame] = useState(initialTimeFrame);
+  const timeFrames = useMemo(() => flowTimeFrames(internships), [internships]);
+  const flow = useMemo(() => buildApplicationFlow(applicationsInTimeFrame(internships, timeFrame)), [internships, timeFrame]);
+  const scope = timeFrame === 'All' ? 'Overall' : timeFrame;
   const svgRef = useRef<SVGSVGElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -28,7 +33,7 @@ export function ApplicationFlowModal({ internships, onClose }: ApplicationFlowMo
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') onClose();
       if (event.key === 'Tab') {
-        const buttons = dialogRef.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)');
+        const buttons = dialogRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), select:not(:disabled)');
         if (!buttons?.length) return;
         const first = buttons[0];
         const last = buttons[buttons.length - 1];
@@ -57,7 +62,7 @@ export function ApplicationFlowModal({ internships, onClose }: ApplicationFlowMo
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'internship-application-flow.svg';
+    link.download = `internship-flow-${scope.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.svg`;
     link.click();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
@@ -75,9 +80,17 @@ export function ApplicationFlowModal({ internships, onClose }: ApplicationFlowMo
             <button ref={closeRef} onClick={onClose} aria-label="Close application flow" className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"><X className="h-5 w-5" /></button>
           </div>
         </div>
+        <div className="mx-5 mb-4 flex flex-wrap items-center gap-3 text-xs">
+          <label htmlFor="flow-time-frame" className="font-medium text-slate-300">Time frame</label>
+          <select id="flow-time-frame" value={timeFrame} onChange={event => setTimeFrame(event.target.value)} className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200">
+            <option value="All">Overall · all time frames</option>
+            {timeFrames.map(term => <option key={term} value={term}>{term}</option>)}
+          </select>
+          <span className="text-slate-400">{flow.total} applications{flow.bookmarked ? ` · ${flow.bookmarked} bookmarked` : ''}</span>
+        </div>
         {flow.total > 0 ? <div className="mx-3 overflow-x-auto rounded-xl bg-white sm:mx-5">
           <svg ref={svgRef} xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 ${layout.width} ${layout.height}`} width={layout.width} height={layout.height} role="img" aria-labelledby="flow-svg-title flow-svg-description" style={{ width: '100%', minWidth: Math.max(800, layout.width * 0.75), height: 'auto', fontFamily: 'Arial, sans-serif' }}>
-            <title id="flow-svg-title">Internship application flow: {flow.total} applications</title>
+            <title id="flow-svg-title">{scope} internship application flow: {flow.total} applications</title>
             <desc id="flow-svg-description">Applied is the default starting stage. Recorded application paths. {[...new Set(layout.links.map(link => link.label))].join('. ')}. {flow.baseline} applications have unknown earlier history. {flow.bookmarked} bookmarks excluded.</desc>
             <rect width={layout.width} height={layout.height} fill="white" />
             <g fill="#64748b" fontSize="11" letterSpacing="1.5">
@@ -100,7 +113,7 @@ export function ApplicationFlowModal({ internships, onClose }: ApplicationFlowMo
               </text>)}
             </g>
           </svg>
-        </div> : <div className="mx-5 rounded-xl border border-dashed border-slate-700 p-12 text-center text-sm text-slate-400">Add an application to generate a diagram.</div>}
+        </div> : <div className="mx-5 rounded-xl border border-dashed border-slate-700 p-12 text-center text-sm text-slate-400">No submitted applications in this time frame.</div>}
         <p className="px-5 py-4 text-xs leading-relaxed text-slate-400">{flow.bookmarked > 0 ? `${flow.bookmarked} bookmarked ${flow.bookmarked === 1 ? 'position' : 'positions'} excluded. ` : ''}Band widths show counts. Skipped stages connect directly; all rejections join one endpoint. Hover a band for details.{flow.baseline > 0 && ` Earlier stages for ${flow.baseline} existing ${flow.baseline === 1 ? 'application were' : 'applications were'} not saved; Applied is included as the default start.`}</p>
       </div>
     </div>

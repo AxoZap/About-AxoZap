@@ -1,68 +1,68 @@
-import React, { useEffect, useState } from 'react';
-import { ApplicationStatus, applicationStatuses } from '../types/internship';
-import { hasRounds, statusLabel } from '../utils/internship';
-import { statusConfig } from './StatusBadge';
+import { useEffect, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { overallStatuses, progressStages, type OverallStatus, type ProgressStage } from '../types/internship';
+import { changeOverallStatus, changeProgressStage, hasProgressedPastApplied, overallStatus, progressStage, progressStatus, savedStageRound, type StatusSelection, type StatusChange } from '../utils/internship';
+import { statusConfig } from './StatusBadge';
 
 interface StatusDropdownProps {
-  status: ApplicationStatus;
-  interviewRound?: string;
+  value: StatusSelection;
+  onChange: (change: StatusChange) => void | Promise<void>;
   onRoundChange: (round: string) => void | Promise<void>;
-  appliedDisabled?: boolean;
-  onChange: (status: ApplicationStatus) => void | Promise<void>;
 }
 
-export const StatusDropdown: React.FC<StatusDropdownProps> = ({ status, interviewRound, appliedDisabled, onChange, onRoundChange }) => {
+export function StatusDropdown({ value, onChange, onRoundChange }: StatusDropdownProps) {
   const [saving, setSaving] = useState(false);
   const [showRound, setShowRound] = useState(false);
-  const [round, setRound] = useState(interviewRound || '');
-  useEffect(() => setRound(interviewRound || ''), [status, interviewRound]);
-  const saveRound = async () => {
-    if (round.trim() === (interviewRound || '')) return;
-    setSaving(true);
-    try { await onRoundChange(round.trim()); } finally { setSaving(false); }
-  };
-  const cfg = statusConfig[status] || statusConfig.Applied;
+  const main = overallStatus(value);
+  const stage = progressStage(value);
+  const storedRound = savedStageRound(value, progressStatus(value));
+  const [round, setRound] = useState(storedRound);
+  useEffect(() => setRound(storedRound), [storedRound, stage]);
+  useEffect(() => setShowRound(false), [main]);
+  const cfg = statusConfig[main];
   const Icon = cfg.icon;
 
-  return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      <div className="relative inline-flex items-center">
-        <div className={`pointer-events-none inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${cfg.bg} ${cfg.text} ${cfg.border} shadow-sm ${saving ? 'opacity-50' : ''}`}>
-          <Icon className="w-3.5 h-3.5 shrink-0" />
-          <span>{statusLabel(status)}</span>
-          <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" />
-        </div>
-        <select
-          // Reset the native selection so choosing the current stage fires again.
-          value=""
-          disabled={saving}
-          onChange={async (event) => {
-            const selected = event.target.value as ApplicationStatus;
+  async function saveRound() {
+    const trimmed = round.trim();
+    if (trimmed === storedRound) return;
+    if (trimmed && !/^[1-9]\d*$/.test(trimmed)) { setRound(storedRound); return; }
+    setSaving(true);
+    try { await onRoundChange(trimmed); } finally { setSaving(false); }
+  }
+
+  return <div className="flex flex-col items-start gap-2">
+    <div className="relative inline-flex items-center">
+      <div className={`pointer-events-none inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${cfg.bg} ${cfg.text} ${cfg.border} ${saving ? 'opacity-50' : ''}`}>
+        <Icon className="h-3.5 w-3.5 shrink-0" /><span>{main}</span><ChevronDown className="h-3 w-3 shrink-0" />
+      </div>
+      <select value={main} disabled={saving} aria-label="Overall status" className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+        onChange={async event => {
+          const next = event.target.value as OverallStatus;
+          setSaving(true);
+          try { await onChange(changeOverallStatus(value, next)); } finally { setSaving(false); }
+        }}>
+        {overallStatuses.map(status => <option key={status} value={status} className="bg-slate-900 text-slate-100">{status}</option>)}
+      </select>
+    </div>
+    {main === 'Applied' && <div className="w-full space-y-1.5 border-l border-slate-700 pl-2">
+      <div className="relative inline-flex max-w-full items-center">
+        <span className="pointer-events-none inline-flex items-center gap-1 text-[11px] text-slate-300">{stage}{storedRound && stage !== 'Application' ? ` · ${storedRound}` : ''}<ChevronDown className="h-3 w-3 shrink-0 text-slate-500" /></span>
+        <select value="" disabled={saving} aria-label="Application progress" className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+          onChange={async event => {
+            const next = event.target.value as ProgressStage;
             event.target.value = '';
             setSaving(true);
-            try { await onChange(selected); setShowRound(hasRounds(selected)); } finally { setSaving(false); }
-          }}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer text-xs disabled:cursor-wait"
-          title="Change Status"
-          aria-label="Change status"
-        >
-          <option value="" disabled hidden>{statusLabel(status)}</option>
-          {applicationStatuses.map((st) => (
-            <option key={st} value={st} disabled={st === 'Applied' && appliedDisabled} className="bg-slate-900 text-slate-100 py-1">
-              {statusLabel(st)}
-            </option>
-          ))}
+            try { await onChange(changeProgressStage(value, next)); setShowRound(next !== 'Application'); } finally { setSaving(false); }
+          }}>
+          <option value="" disabled hidden>{stage}</option>
+          {progressStages.map(option => <option key={option} value={option} disabled={option === 'Application' && hasProgressedPastApplied(value)} className="bg-slate-900 text-slate-100">{option}</option>)}
         </select>
       </div>
-      {showRound && hasRounds(status) && (
-        <input type="text" inputMode="numeric" value={round} disabled={saving}
-          onChange={event => setRound(event.target.value)}
-          onBlur={() => { void saveRound(); }}
-          onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); event.currentTarget.blur(); } }}
-          aria-label={`${statusLabel(status)} round`} placeholder="Round number"
-          className="w-24 rounded-md border border-slate-700 bg-slate-950/60 px-2 py-1 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 disabled:opacity-50" />
-      )}
-    </div>
-  );
-};
+      {showRound && stage !== 'Application' && <input type="number" min="1" step="1" value={/^\d+$/.test(round) ? round : ''} disabled={saving}
+        onChange={event => setRound(event.target.value)} onBlur={() => { void saveRound(); }}
+        onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); event.currentTarget.blur(); } }}
+        aria-label={`${stage} round`} placeholder="Round"
+        className="block w-24 rounded-md border border-slate-700 bg-slate-950/60 px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 disabled:opacity-50" />}
+    </div>}
+  </div>;
+}
