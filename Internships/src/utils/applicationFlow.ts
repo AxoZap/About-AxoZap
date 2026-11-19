@@ -5,7 +5,7 @@ const stages: { status: ApplicationStatus; label: string; pending: string; color
   { status: 'Applied', label: 'Applied', pending: 'Awaiting response', color: '#d99b35' },
   { status: 'OA', label: 'Assessment', pending: 'Assessment stage', color: '#5695c8' },
   { status: 'Interview Round', label: 'Interview', pending: 'Awaiting decision', color: '#8b78d2' },
-  { status: 'Offer', label: 'Offer', pending: 'Offer received', color: '#41a584' },
+  { status: 'Offer', label: 'Offer', pending: 'Offer', color: '#41a584' },
   { status: 'Withdrawn', label: 'Withdrawn', pending: 'Withdrawn', color: '#8493a6' },
 ];
 
@@ -71,6 +71,8 @@ export function buildApplicationFlow(internships: Internship[]) {
     const path: { status: ApplicationStatus; round: string }[] = [{ status: 'Applied', round: '' }];
     const entries = [...(internship.statusHistory ?? []), internship];
     for (const entry of entries) {
+      // A current offer is the outcome itself, not an extra progress stop.
+      if (main === 'Offer' && entry.status === 'Offer') continue;
       if (entry.status === 'Applied' || entry.status === 'Withdrawn' || !stages.some(stage => stage.status === entry.status)) continue;
       const round = entry.status === 'Interview Round' || entry.status === 'OA' ? entry.interviewRound?.trim() || '' : '';
       const previous = path[path.length - 1];

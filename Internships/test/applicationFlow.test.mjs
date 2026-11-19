@@ -186,3 +186,23 @@ test('returning to an interview after a different stage keeps a separate visit',
   assert.equal(flow.nodes.filter(node => node.kind === 'stage' && node.label === 'Interview').length, 2);
   for (const link of layoutApplicationFlow(flow).links) assert.ok(link.sourceNode.layer < link.targetNode.layer);
 });
+
+test('current offers merge at one final Offer endpoint directly from recorded progress', () => {
+  const flow = buildApplicationFlow([
+    application(['Applied', 'Offer']),
+    application(['Applied', 'OA', 'Offer']),
+    application(['Applied', 'Interview Round', 'Offer', 'Offer']),
+  ]);
+  const offer = flow.nodes.filter(node => node.label === 'Offer');
+  assert.equal(offer.length, 1);
+  assert.equal(offer[0].kind, 'outcome');
+  assert.equal(offer[0].count, 3);
+  assert.ok(!flow.nodes.some(node => node.label === 'Offer received'));
+  assert.deepEqual(edges(flow).filter(edge => edge[1] === 'Offer'), [
+    ['Applied', 'Offer', 1], ['Assessment', 'Offer', 1], ['Interview', 'Offer', 1],
+  ]);
+  assert.ok(!flow.links.some(link => link.source === offer[0].key));
+  const layout = layoutApplicationFlow(flow);
+  const finalOffer = layout.nodes.find(node => node.key === offer[0].key);
+  assert.equal(finalOffer.layer, Math.max(...layout.nodes.map(node => node.layer)));
+});
