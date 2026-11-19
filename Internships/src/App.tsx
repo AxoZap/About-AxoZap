@@ -118,6 +118,16 @@ export default function App() {
     await saveQuickChange({ ...target, interviewRound: round.trim() || undefined, updatedAt: localDateString() });
   };
 
+  const handleDelete = async (id: string) => {
+    try {
+      await apiRequest<{ success: boolean }>(`${API_URL}/${id}`, { method: 'DELETE' });
+      setInternships(prev => prev.filter(item => item.id !== id));
+      setError('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not delete the application.');
+    }
+  };
+
   // Reset filters
   const handleResetFilters = () => {
     setSearchQuery('');
@@ -208,6 +218,7 @@ export default function App() {
           internships={filteredInternships}
           onStatusChange={handleStatusChange}
           onRoundChange={handleRoundChange}
+          onDelete={handleDelete}
           onEdit={(internship) => {
             setEditingInternship(internship);
             setIsModalOpen(true);

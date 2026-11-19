@@ -4,6 +4,7 @@ import {
   MapPin, 
   ExternalLink, 
   Edit3, 
+  Trash2,
   Calendar,
 } from 'lucide-react';
 import { Internship } from '../types/internship';
@@ -15,6 +16,7 @@ interface InternshipTableProps {
   onStatusChange: (id: string, change: StatusChange) => Promise<void>;
   onRoundChange: (id: string, round: string) => Promise<void>;
   onEdit: (internship: Internship) => void;
+  onDelete: (id: string) => void;
 }
 
 export const InternshipTable: React.FC<InternshipTableProps> = ({
@@ -22,6 +24,7 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
   onStatusChange,
   onRoundChange,
   onEdit,
+  onDelete,
 }) => {
   if (internships.length === 0) {
     return (
@@ -45,7 +48,7 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
             <col className="w-44" />
             <col />
             <col className="w-28" />
-            <col className="w-20" />
+            <col className="w-24" />
           </colgroup>
           <thead>
             <tr className="border-b border-slate-800 bg-slate-900/80 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
@@ -157,6 +160,14 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
                       aria-label={`Edit ${item.company}`}
                     >
                       <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => { if (confirm(`Remove ${item.company}?`)) onDelete(item.id); }}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
+                      title="Delete"
+                      aria-label={`Delete ${item.company}`}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </td>
