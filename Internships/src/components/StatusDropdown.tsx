@@ -4,6 +4,12 @@ import { overallStatuses, progressStages, type OverallStatus, type ProgressStage
 import { changeOverallStatus, changeProgressStage, hasProgressedPastApplied, overallStatus, progressStage, progressStatus, savedStageRound, type StatusSelection, type StatusChange } from '../utils/internship';
 import { statusConfig } from './StatusBadge';
 
+const progressStyles: Record<ProgressStage, string> = {
+  Application: 'border-blue-500/50 bg-blue-500/15 text-blue-200 hover:bg-blue-500/25',
+  Assessment: 'border-purple-500/50 bg-purple-500/15 text-purple-200 hover:bg-purple-500/25',
+  Interview: 'border-amber-500/50 bg-amber-500/15 text-amber-200 hover:bg-amber-500/25',
+};
+
 interface StatusDropdownProps {
   value: StatusSelection;
   onChange: (change: StatusChange) => void | Promise<void>;
@@ -44,9 +50,9 @@ export function StatusDropdown({ value, onChange, onRoundChange }: StatusDropdow
         {overallStatuses.map(status => <option key={status} value={status} className="bg-slate-900 text-slate-100">{status}</option>)}
       </select>
     </div>
-    {main === 'Applied' && <div className="w-full space-y-1.5 border-l border-slate-700 pl-2">
-      <div className="relative inline-flex max-w-full items-center">
-        <span className="pointer-events-none inline-flex items-center gap-1 text-[11px] text-slate-300">{stage}{storedRound && stage !== 'Application' ? ` · ${storedRound}` : ''}<ChevronDown className="h-3 w-3 shrink-0 text-slate-500" /></span>
+    {main === 'Applied' && <div className="w-full space-y-2">
+      <div className={`relative flex min-h-8 w-full items-center rounded-lg border px-2.5 py-1.5 transition-colors focus-within:ring-2 focus-within:ring-slate-300/70 focus-within:ring-offset-2 focus-within:ring-offset-slate-900 ${progressStyles[stage]} ${saving ? 'opacity-50' : ''}`}>
+        <span className="pointer-events-none inline-flex w-full items-center justify-between gap-1.5 text-xs font-semibold"><span>{stage}{storedRound && stage !== 'Application' ? ` · ${storedRound}` : ''}</span><ChevronDown className="h-3.5 w-3.5 shrink-0" /></span>
         <select value="" disabled={saving} aria-label="Application progress" className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
           onChange={async event => {
             const next = event.target.value as ProgressStage;
