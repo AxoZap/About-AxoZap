@@ -59,7 +59,7 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
               <th className="py-3 px-4">Pay</th>
               <th className="py-3 px-4">Notes & Links</th>
               <th className="py-3 px-3 text-center">Portal</th>
-              <th className="py-3 px-4 text-right">Actions</th>
+              <th className="sticky right-0 z-10 bg-slate-900 border-l border-slate-800 py-3 px-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800/60 text-sm">
@@ -151,7 +151,7 @@ export const InternshipTable: React.FC<InternshipTableProps> = ({
                 </td>
 
                 {/* Actions */}
-                <td className="py-3.5 px-4 text-right">
+                <td className="sticky right-0 z-10 bg-slate-900 border-l border-slate-800 py-3.5 px-4 text-right">
                   <div className="flex items-center justify-end gap-1 whitespace-nowrap">
                     <button
                       onClick={() => onEdit(item)}
